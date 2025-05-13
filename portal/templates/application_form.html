@@ -1,23 +1,28 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apply Now</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Apply Now - Oceanview University</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         :root {
-            --primary-color: #4361ee;
-            --secondary-color: #3f37c9;
-            --accent-color: #4895ef;
-            --light-color: #f8f9fa;
-            --dark-color: #212529;
-            --success-color: #4cc9f0;
-            --danger-color: #f72585;
+            --primary-blue: #0056b3;
+            --dark-blue: #003366;
+            --navy-blue: #001f3f;
+            --sky-blue: #0074D9;
+            --teal: #39CCCC;
+            --gold: #FFD700;
+            --white: #FFFFFF;
+            --light-gray: #F8F9FA;
+            --dark-gray: #343A40;
+            --success: #28a745;
+            --danger: #dc3545;
             --border-radius: 8px;
-            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             --transition: all 0.3s ease;
         }
 
@@ -30,57 +35,137 @@
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f5f7fa;
-            color: var(--dark-color);
+            color: var(--dark-gray);
             line-height: 1.6;
+            padding: 20px;
         }
 
-        .container {
+        .application-container {
             max-width: 900px;
             margin: 2rem auto;
-            padding: 2rem;
-            background: white;
+            background: var(--white);
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
+            overflow: hidden;
         }
 
-        .header {
+        .form-header {
+            background: var(--navy-blue);
+            color: var(--white);
+            padding: 2rem;
             text-align: center;
-            margin-bottom: 2rem;
             position: relative;
         }
 
-        .header h1 {
-            color: var(--primary-color);
-            font-weight: 600;
+        .form-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
             margin-bottom: 0.5rem;
+            font-size: 2.2rem;
         }
 
-        .header::after {
+        .form-header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: center;
+            padding: 1.5rem 2rem;
+            background: rgba(0, 84, 166, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 1.5rem;
+            position: relative;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--white);
+            border: 2px solid var(--sky-blue);
+            color: var(--sky-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            z-index: 2;
+        }
+
+        .step.active .step-number {
+            background: var(--sky-blue);
+            color: var(--white);
+            border-color: var(--sky-blue);
+        }
+
+        .step.completed .step-number {
+            background: var(--success);
+            color: var(--white);
+            border-color: var(--success);
+        }
+
+        .step-label {
+            font-size: 0.9rem;
+            color: var(--dark-gray);
+            font-weight: 500;
+        }
+
+        .step.active .step-label {
+            color: var(--navy-blue);
+            font-weight: 600;
+        }
+
+        .step::before {
             content: '';
-            display: block;
-            width: 100px;
-            height: 4px;
-            background: var(--accent-color);
-            margin: 0 auto;
-            border-radius: 2px;
+            position: absolute;
+            top: 20px;
+            left: -50%;
+            width: 100%;
+            height: 2px;
+            background: #ddd;
+            z-index: 1;
+        }
+
+        .step:first-child::before {
+            display: none;
+        }
+
+        .form-content {
+            padding: 2rem;
         }
 
         .form-section {
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .section-title {
-            font-size: 1.2rem;
-            color: var(--secondary-color);
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #eee;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            color: var(--navy-blue);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--gold);
             display: flex;
             align-items: center;
         }
 
         .section-title i {
-            margin-right: 0.5rem;
+            margin-right: 12px;
+            color: var(--gold);
         }
 
         .form-grid {
@@ -97,7 +182,7 @@
             display: block;
             margin-bottom: 0.5rem;
             font-weight: 500;
-            color: var(--dark-color);
+            color: var(--navy-blue);
         }
 
         .form-control {
@@ -108,12 +193,14 @@
             font-family: inherit;
             font-size: 1rem;
             transition: var(--transition);
+            background-color: var(--light-gray);
         }
 
         .form-control:focus {
             outline: none;
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(72, 149, 239, 0.2);
+            border-color: var(--sky-blue);
+            box-shadow: 0 0 0 3px rgba(0, 116, 217, 0.2);
+            background-color: var(--white);
         }
 
         select.form-control {
@@ -124,118 +211,148 @@
             background-size: 1em;
         }
 
-        .btn {
-            display: inline-block;
-            padding: 0.75rem 2rem;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: var(--border-radius);
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
-            text-align: center;
-        }
-
-        .btn:hover {
-            background-color: var(--secondary-color);
-            transform: translateY(-2px);
-        }
-
-        .btn-block {
-            display: block;
-            width: 100%;
-        }
-
         .file-upload {
             position: relative;
             overflow: hidden;
-            display: inline-block;
             width: 100%;
         }
 
         .file-upload-btn {
-            border: 1px dashed #ccc;
+            border: 2px dashed #ccc;
             border-radius: var(--border-radius);
-            padding: 2rem 1rem;
+            padding: 2.5rem 1rem;
             text-align: center;
             cursor: pointer;
             transition: var(--transition);
-            width: 100%;
+            background-color: var(--light-gray);
         }
 
         .file-upload-btn:hover {
-            border-color: var(--accent-color);
-            background-color: rgba(72, 149, 239, 0.05);
-        }
-
-        .file-upload-input {
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
+            border-color: var(--sky-blue);
+            background-color: rgba(0, 116, 217, 0.05);
         }
 
         .file-upload-text {
-            margin-top: 0.5rem;
+            margin-top: 0.75rem;
             font-size: 0.9rem;
             color: #666;
         }
 
         .file-upload-preview {
-            margin-top: 1rem;
-            max-width: 150px;
-            max-height: 150px;
+            margin-top: 1.5rem;
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
-            border: 3px solid #eee;
+            border: 4px solid var(--light-gray);
+            object-fit: cover;
             display: none;
         }
 
+        .btn-submit {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--gold);
+            color: var(--navy-blue);
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn-submit:hover {
+            background-color: #FFC300;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 195, 0, 0.4);
+        }
+
+        /* Form validation styles */
+        .errorlist {
+            list-style: none;
+            color: var(--danger);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            padding-left: 0;
+        }
+
+        .is-invalid {
+            border-color: var(--danger) !important;
+        }
+
+        .is-invalid:focus {
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2) !important;
+        }
+
+        /* Responsive adjustments */
         @media (max-width: 768px) {
-            .container {
+            .application-container {
+                margin: 1rem auto;
+            }
+            
+            .form-header {
                 padding: 1.5rem;
-                margin: 1rem;
+            }
+            
+            .form-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .progress-steps {
+                padding: 1rem;
+                flex-wrap: wrap;
+            }
+            
+            .step {
+                padding: 0.5rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .step::before {
+                display: none;
+            }
+            
+            .form-content {
+                padding: 1.5rem;
             }
             
             .form-grid {
                 grid-template-columns: 1fr;
             }
         }
-
-        /* Form validation styles */
-        .errorlist {
-            list-style: none;
-            color: var(--danger-color);
-            font-size: 0.85rem;
-            margin-top: 0.25rem;
-        }
-
-        .is-invalid {
-            border-color: var(--danger-color) !important;
-        }
-
-        .is-invalid:focus {
-            box-shadow: 0 0 0 3px rgba(247, 37, 133, 0.2) !important;
-        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Application Form</h1>
-            <p>Please fill out all required fields to complete your application</p>
+    <div class="application-container">
+        <div class="form-header">
+            <h1>Oceanview University Application</h1>
+            <p>Complete your application in a few simple steps</p>
         </div>
 
-        <form method="POST" enctype="multipart/form-data">
+        <div class="progress-steps">
+            <div class="step active">
+                <div class="step-number">1</div>
+                <div class="step-label">Personal Info</div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-label">Academic Info</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-label">Review & Submit</div>
+            </div>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="form-content">
             {% csrf_token %}
             
             <!-- Personal Information Section -->
             <div class="form-section">
-                <h2 class="section-title"><i class="fas fa-user"></i> Personal Information</h2>
+                <h2 class="section-title"><i class="fas fa-user-graduate"></i> Personal Information</h2>
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="id_surname">Surname *</label>
@@ -274,7 +391,7 @@
 
             <!-- Contact Information Section -->
             <div class="form-section">
-                <h2 class="section-title"><i class="fas fa-address-book"></i> Contact Information</h2>
+                <h2 class="section-title"><i class="fas fa-map-marker-alt"></i> Contact Information</h2>
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="id_address">Residential Address *</label>
@@ -296,7 +413,7 @@
 
             <!-- Academic Information Section -->
             <div class="form-section">
-                <h2 class="section-title"><i class="fas fa-graduation-cap"></i> Academic Information</h2>
+                <h2 class="section-title"><i class="fas fa-book-open"></i> Academic Information</h2>
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="id_school">School *</label>
@@ -320,13 +437,13 @@
 
             <!-- Profile Picture Section -->
             <div class="form-section">
-                <h2 class="section-title"><i class="fas fa-camera"></i> Profile Picture</h2>
+                <h2 class="section-title"><i class="fas fa-id-card"></i> Profile Picture</h2>
                 <div class="form-group">
                     <div class="file-upload">
                         <div class="file-upload-btn">
-                            <i class="fas fa-cloud-upload-alt fa-2x" style="color: var(--accent-color);"></i>
-                            <p>Click to upload profile picture</p>
-                            <p class="file-upload-text">JPEG or PNG (Max 2MB)</p>
+                            <i class="fas fa-cloud-upload-alt fa-3x" style="color: var(--sky-blue); margin-bottom: 1rem;"></i>
+                            <p style="font-weight: 500; color: var(--navy-blue);">Drag & drop your photo or click to browse</p>
+                            <p class="file-upload-text">JPG or PNG (Max 2MB | 300x300px recommended)</p>
                             {{ form.profile_picture }}
                         </div>
                         <img id="image-preview" class="file-upload-preview" src="#" alt="Preview" />
@@ -335,10 +452,18 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-block">Submit Application</button>
+            <div class="form-group form-check">
+                <input type="checkbox" class="form-check-input" id="termsCheck" required>
+                <label class="form-check-label" for="termsCheck">I certify that all information provided is accurate and complete *</label>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-paper-plane mr-2"></i> Submit Application
+            </button>
         </form>
     </div>
 
+    <!-- Your original JavaScript remains unchanged -->
     <script>
         // Image preview functionality
         function readURL(input) {
