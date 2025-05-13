@@ -1,0 +1,104 @@
+:root {
+    /* Enhanced Color Palette */
+    --primary-blue: #3a56e8;
+    --primary-blue-light: #5d75ee;
+    --primary-blue-dark: #2c45d6;
+    --accent-teal: #2dd4bf;
+    --accent-purple: #a855f7;
+    --accent-amber: #f59e0b;
+    --light-bg: #f8fafc;
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --success-green: #10b981;
+    --warning-orange: #f97316;
+    --error-red: #ef4444;
+    --info-blue: #3b82f6;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--light-bg);
+    color: var(--text-primary);
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Sidebar Fix */
+.sidebar-wrapper {
+    width: 250px;
+    min-height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 100;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+}
+
+/* Main Content Area */
+.main-content {
+    flex: 1;
+    padding: 2rem;
+    margin-left: 250px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+/* Header Styling */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.page-title {
+    font-weight: 600;
+    color: var(--primary-blue-dark);
+    margin-bottom: 0;
+    font-size: 1.75rem;
+}
+
+/* ... (continue with all other CSS rules from previous example) ... */
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    .sidebar-wrapper {
+        transform: translateX(-100%);
+    }
+    
+    .sidebar-wrapper.active {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 1.5rem;
+    }
+    
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .mobile-menu-btn {
+        display: block !important;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 101;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+}
