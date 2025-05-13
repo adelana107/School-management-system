@@ -317,12 +317,12 @@
                     courseSelect.prop('disabled', false);
                     courseSelect.find('option').each(function() {
                         const option = $(this);
-                        if (option.val() === "" || 
-                            (option.data('semester') == semesterId && 
-                             option.data('department') == departmentId)) {
+                        if (option.val() === "") {
                             option.show();
                         } else {
-                            option.hide();
+                            const matchesSemester = option.data('semester') == semesterId;
+                            const matchesDepartment = option.data('department') == departmentId;
+                            option.toggle(matchesSemester && matchesDepartment);
                         }
                     });
                     courseSelect.val('');
