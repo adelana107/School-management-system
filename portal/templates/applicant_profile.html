@@ -14,29 +14,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'portal/css/application_profile.css' %}">
     
-    <!-- Additional Styles for Print -->
-    <style>
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            #print-section, #print-section * {
-                visibility: visible;
-            }
-            #print-section {
-                position: absolute;
-                left: 0;
-                top: 0;
-            }
-        }
-        body {
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .dark-mode {
-            background-color: #121212;
-            color: #ffffff;
-        }
-    </style>
 </head>
 <body>
 
@@ -73,8 +50,6 @@
                     <p><span class="bio-label">Email:</span> <span class="bio-value">{{ application.email }}</span></p>
                     <p><span class="bio-label">Phone:</span> <span class="bio-value">{{ application.phone_number }}</span></p>
                     <p><span class="bio-label">Date of Birth:</span> <span class="bio-value">{{ application.date_of_birth|date:"F d, Y" }}</span></p>
-                    <p><span class="bio-label">Gender:</span> <span class="bio-value">{{ application.get_gender_display }}</span></p>
-                    <p><span class="bio-label">Marital Status:</span> <span class="bio-value">{{ application.get_marital_status_display }}</span></p>
                 </div>
                 <div class="col-md-6">
                     <p><span class="bio-label">Department:</span> <span class="bio-value">{{ application.department.name }}</span></p>
@@ -83,7 +58,6 @@
                     <p><span class="bio-label">Address:</span> <span class="bio-value">{{ application.address }}</span></p>
                     <p><span class="bio-label">State of Origin:</span> <span class="bio-value">{{ application.state_of_origin.name }}</span></p>
                     <p><span class="bio-label">Local Govt:</span> <span class="bio-value">{{ application.local_government.name }}</span></p>
-                    <p><span class="bio-label">Nationality:</span> <span class="bio-value">{{ application.nationality }}</span></p>
                 </div>
             </div>
         </div>
@@ -112,52 +86,7 @@
     {% endfor %}
 </div>
 
-<script>
-    function printBiodata() {
-        var printContents = document.getElementById("print-section").innerHTML;
-        var originalContents = document.body.innerHTML;
-        
-        // Create a print-friendly header
-        var universityHeader = `
-            <div style="text-align:center; margin-bottom:20px;">
-                <h2 style="color:#003366;">Oceanview University</h2>
-                <h3 style="color:#0056b3;">Applicant Biodata</h3>
-                <hr style="border-top:2px solid #ffc107; width:50%; margin:10px auto;">
-            </div>
-        `;
-        
-        document.body.innerHTML = universityHeader + printContents;
-        window.print();
-        document.body.innerHTML = originalContents;
-    }
-
-    function toggleDarkMode() {
-        document.body.classList.toggle("dark-mode");
-        const icon = document.querySelector('.btn-dark i');
-        if (document.body.classList.contains("dark-mode")) {
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-        } else {
-            icon.classList.remove('fa-sun');
-            icon.classList.add('fa-moon');
-        }
-        
-        // Save preference to localStorage
-        const isDarkMode = document.body.classList.contains("dark-mode");
-        localStorage.setItem('darkMode', isDarkMode);
-    }
-    
-    // Check for saved dark mode preference
-    document.addEventListener('DOMContentLoaded', function() {
-        const darkMode = localStorage.getItem('darkMode') === 'true';
-        if (darkMode) {
-            document.body.classList.add("dark-mode");
-            const icon = document.querySelector('.btn-dark i');
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-        }
-    });
-</script>
+<script src="{% static 'portal/js/applicant_profile.js' %}"></script>
 
 </body>
 </html>

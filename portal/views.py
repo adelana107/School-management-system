@@ -95,13 +95,13 @@ def applicant_login(request):
             
             if user:
                 login(request, user)
-                return redirect("application_profile")  # Redirect to profile page
+                return redirect("applicant_profile")  # Redirect to profile page
             else:
-                return render(request, "applicant_portal_login.html", {"form": form, "error": "Invalid application number or surname."})
+                return render(request, "applicant_login.html", {"form": form, "error": "Invalid application number or surname."})
     else:
         form = ApplicantLoginForm()
 
-    return render(request, "applicant_portal_login.html", {"form": form})
+    return render(request, "applicant_login.html", {"form": form})
 
 
 def student_login(request):
@@ -116,16 +116,16 @@ def student_login(request):
             
             if user:
                 login(request, user)
-                return redirect("student_portal")  # Redirect to student profile
+                return redirect("portal")  # Redirect to student profile
             else:
-                return render(request, "student_portal_login.html", {
+                return render(request, "student_login.html", {
                     "form": form,
                     "error": "Invalid application number or surname."
                 })
     else:
         form = StudentLoginForm()
 
-    return render(request, "student_portal_login.html", {"form": form})
+    return render(request, "student_login.html", {"form": form})
 
 
 
@@ -146,7 +146,7 @@ def applicant_profile(request):
         
         return redirect("admission_success", students.application_number, students.surname )
 
-    return render(request, "application_profile.html", {"applications": applications, "students": students})
+    return render(request, "applicant_profile.html", {"applications": applications, "students": students})
 
 
 
@@ -187,7 +187,7 @@ def student_portal(request):
         'recent_announcements': [],  # Add your announcements logic here
     }
 
-    return render(request, "student_portal.html", context)
+    return render(request, "portal.html", context)
 
 
 def student_biodata(request):
@@ -197,7 +197,7 @@ def student_biodata(request):
     except Student.DoesNotExist:
         student = None  # If student is not found, avoid errors
 
-    return render(request, "student_biodata.html", {"student": student})
+    return render(request, "biodata.html", {"student": student})
 
 
 def CourseRegistration(request):
@@ -208,7 +208,7 @@ def CourseRegistration(request):
         semester=student.semester,
     )  # Fetch their application
 
-    return render (request, 'portal_course_registration.html', {"courses": courses, "student": student})
+    return render (request, 'course_registration.html', {"courses": courses, "student": student})
 
 def submit_registration(request):
     if request.method == "POST":
@@ -248,14 +248,14 @@ def registered_courses(request):
 )
 
 
-    return render(request, "portal_registered_courses.html", {
+    return render(request, "registered_courses.html", {
         "registered_courses": registered_courses,
         "student": student
     })
 
 def headline_news(request):
     headlines = Headline.objects.all()
-    return render(request, "portal-news.html", {"headlines": headlines})
+    return render(request, "news.html", {"headlines": headlines})
 
 
 
@@ -310,7 +310,7 @@ def Notification_Page(request):
     notifications = Notification.objects.all()
     student = Student.objects.filter(application_number=user.username).first()
 
-    return render(request, 'portal_notification.html', {'notifications':notifications, 'student':student})
+    return render(request, 'notification.html', {'notifications':notifications, 'student':student})
 
 @require_http_methods(["GET", "POST"])
 def View_Notification(request, Notification_id):
@@ -327,7 +327,7 @@ def View_Notification(request, Notification_id):
         return JsonResponse({'success': True})
 
     # Handle GET request (normal page load)
-    return render(request, 'portal_notification_page.html', {
+    return render(request, 'notification_page.html', {
         'notification': notification,
         'student': student,
     })

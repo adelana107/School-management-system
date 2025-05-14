@@ -18,7 +18,7 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(next_page="applicant_login"), name="logout"),
     
     # Applicant Profile
-    path('applicant-profile/', views.applicant_profile, name='application_profile'),
+    path('profile/', views.applicant_profile, name='applicant_profile'),
 
     # Student Portal
     path('student-portal-login/', views.student_login, name='student_login'),
