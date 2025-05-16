@@ -13,10 +13,15 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from collections import defaultdict
 from django.views.decorators.http import require_GET
+from django.db.models.functions import ExtractMonth, ExtractYear
+from datetime import datetime, timedelta
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+import json
+
+
+
 # Create your views here.
-
-
-
 def Crmlogin(request):
     if request.method == "POST":
         form = CrmLoginForm(request.POST)
@@ -29,20 +34,20 @@ def Crmlogin(request):
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
                 messages.error(request, "User with this email does not exist.")
-                return render(request, "crm/crm_login.html", {"form": form})
+                return render(request, "crm/login.html", {"form": form})
 
             # Authenticate user
             user = authenticate(request, username=user.username, password=password)
 
             if user is not None and user.is_superuser:  # Ensure only superusers can log in
                 login(request, user)
-                return redirect("crm_dashboard")
+                return redirect("dashboard")
             else:
                 messages.error(request, "Invalid email or password.")
     else:
         form = CrmLoginForm()
 
-    return render(request, "crm/crm_login.html", {"form": form})
+    return render(request, "crm/login.html", {"form": form})
 
 def is_superuser(user):
     """Check if the user is a superuser."""
@@ -52,14 +57,14 @@ def is_superuser(user):
 @user_passes_test(is_superuser)
 @login_required(login_url="crm_login")
 def crm_dashboard(request):
-    # Fetch counts for dashboard metrics
+    # Dashboard metrics
     total_applications = Application.objects.count()
     total_schools = School.objects.count()
     total_departments = Department.objects.count()
     pending_applications = Application.objects.filter(is_approved=False).count()
     admitted_students = Student.objects.count()
 
-    # Applications by Month (Compatible with SQLite & PostgreSQL)
+    # Applications by month
     applications_by_month = (
         Application.objects.annotate(month=ExtractMonth("created_at"))
         .values("month")
@@ -67,12 +72,32 @@ def crm_dashboard(request):
         .order_by("month")
     )
 
-    # Format months and counts for the chart
-    months = [datetime.strptime(str(item["month"]), "%m").strftime("%b") for item in applications_by_month if item["month"]]
-    application_counts = [item["count"] for item in applications_by_month]
+    # Students by month (approved applications)
+    students_by_month = (
+        Student.objects.annotate(month=ExtractMonth("created_at"))
+        .values("month")
+        .annotate(count=Count("id"))
+        .order_by("month")
+    )
 
-    # Fetch recent applications
-    recent_applications = Application.objects.order_by("-id")[:5]
+    # Prepare chart data
+    months = []
+    application_counts = []
+    student_counts = []
+    
+    # Create a dictionary of month: count for students
+    student_data = {item['month']: item['count'] for item in students_by_month}
+    
+    # Process applications to align months and fill in student counts
+    for app in applications_by_month:
+        month_num = app['month']
+        months.append(datetime.strptime(str(month_num), "%m").strftime("%b"))
+        application_counts.append(app['count'])
+        student_counts.append(student_data.get(month_num, 0))
+
+    # Recent applications for the table - removed 'user' from select_related
+    recent_applications = Application.objects.select_related('school', 'department') \
+                                  .order_by("-created_at")[:5]
 
     context = {
         "total_applications": total_applications,
@@ -81,11 +106,169 @@ def crm_dashboard(request):
         "pending_applications": pending_applications,
         "admitted_students": admitted_students,
         "recent_applications": recent_applications,
-        "months": months,
-        "application_counts": application_counts,
+        "months": json.dumps(months),
+        "application_counts": json.dumps(application_counts),
+        "student_counts": json.dumps(student_counts),
     }
+    return render(request, "crm/dashboard.html", context)
 
-    return render(request, "crm/crm_dashboard.html", context)
+@require_POST
+def update_application_status(request, pk):
+    try:
+        application = get_object_or_404(Application, pk=pk)
+        data = json.loads(request.body)
+        status = data.get('status')
+        
+        if status == 'approved':
+            application.is_approved = True
+            application.save()
+            
+            # Create student record using available fields
+            student = Student.objects.create(
+                # Using name fields from Application
+                first_name=application.first_name,
+                last_name=application.surname,
+                # Related fields
+                school=application.school,
+                department=application.department,
+                # Link back to the application
+                application=application,
+                # Add any other required fields that exist in both models
+                # For example:
+                state_of_origin=application.state_of_origin,
+                local_government=application.local_government,
+                academic_session=application.academic_session,
+                year=application.year,
+                semester=application.semester
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Application approved and student created',
+                'student_id': student.id  # Optional: return the new student ID
+            })
+            
+        elif status == 'pending':
+            application.is_approved = False
+            application.save()
+            return JsonResponse({
+                'success': True,
+                'message': 'Application status set to pending'
+            })
+            
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid status'
+        }, status=400)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e),
+            'error_type': type(e).__name__  # Helps with debugging
+        }, status=500)
+
+def chart_data(request):
+    # Get range parameter (3, 6, or 12 months)
+    range_param = request.GET.get('range', '12')
+    try:
+        month_range = int(range_param)
+    except ValueError:
+        month_range = 12
+    
+    # Validate range
+    if month_range not in [3, 6, 12]:
+        month_range = 12
+    
+    # Get current month and year
+    current_date = datetime.now()
+    current_month = current_date.month
+    current_year = current_date.year
+    
+    # Calculate date range
+    if month_range == 12:
+        # Full year - get all months
+        months_to_show = range(1, 13)
+    else:
+        # For 3 or 6 months, handle year transition
+        months_to_show = [(current_month - i) % 12 or 12 for i in range(month_range-1, -1, -1)]
+    
+    # Get applications data
+    applications = (
+        Application.objects
+        .annotate(month=ExtractMonth("created_at"), year=ExtractYear("created_at"))
+        .filter(
+            Q(year=current_year) |
+            Q(year=current_year-1, month__gte=months_to_show[0])
+        )
+        .values("month")
+        .annotate(count=Count("id"))
+        .order_by("month")
+    )
+    
+    # Get students data
+    students = (
+        Student.objects
+        .annotate(month=ExtractMonth("created_at"), year=ExtractYear("created_at"))
+        .filter(
+            Q(year=current_year) |
+            Q(year=current_year-1, month__gte=months_to_show[0])
+        )
+        .values("month")
+        .annotate(count=Count("id"))
+        .order_by("month")
+    )
+    
+    # Prepare response data
+    months = []
+    application_counts = []
+    student_counts = []
+    
+    # Create dictionaries for quick lookup
+    apps_dict = {item['month']: item['count'] for item in applications}
+    students_dict = {item['month']: item['count'] for item in students}
+    
+    # Generate data for all months in range
+    for month_num in months_to_show:
+        months.append(datetime.strptime(str(month_num), "%m").strftime("%b"))
+        application_counts.append(apps_dict.get(month_num, 0))
+        student_counts.append(students_dict.get(month_num, 0))
+    
+    return JsonResponse({
+        'months': months,
+        'applications': application_counts,
+        'students': student_counts
+    })
+
+
+def search_applications(request):
+    query = request.GET.get('q', '').strip()
+    if len(query) < 3:
+        return JsonResponse({'results': []})
+    
+    # Search by name fields directly from Application model
+    applications = Application.objects.filter(
+        Q(first_name__icontains=query) |
+        Q(surname__icontains=query) |
+        Q(email__icontains=query) |  # Assuming you have an email field
+        Q(school__name__icontains=query) |
+        Q(department__name__icontains=query) |
+        Q(application_number__icontains=query)  # Search by application number
+    ).select_related('school', 'department')[:10]  # Limit results
+    
+    results = [{
+        'id': app.id,
+        'name': f"{app.first_name} {app.surname}",
+        'email': app.email,  # Direct field from Application
+        'school': app.school.name if app.school else '',
+        'department': app.department.name if app.department else '',
+        'status': 'Approved' if app.is_approved else 'Pending',
+        'date': app.created_at.strftime("%Y-%m-%d"),
+        'application_number': app.application_number  # Include application number
+    } for app in applications]
+    
+    return JsonResponse({'results': results})
+
 
 
 def applicant_list(request):
@@ -260,7 +443,7 @@ def move_to_new_semester(request):
 
         if not first_semester or not second_semester:
             messages.error(request, f"Error: Year {current_year.number} does not have both semesters!")
-            return redirect("crm_dashboard")
+            return redirect("dashboard")
 
         # Move to next semester or next year
         if current_semester == first_semester:
@@ -284,11 +467,11 @@ def move_semester_confirmationPage(request):
     if request.method == "POST":
         return redirect("move_semester")  # Redirect to the actual move function
 
-    return render(request, "crm/crm_move_confirmation_page.html")
+    return render(request, "crm/move_confirmation_page.html")
 
 
 def semester_success(request):
-    return render(request, "crm/crm_move_semester_success_page.html")
+    return render(request, "crm/move_semester_success_page.html")
 
 
 def move_to_previous_semester(request):
@@ -304,7 +487,7 @@ def move_to_previous_semester(request):
 
         if not first_semester or not second_semester:
             messages.error(request, f"Error: Year {current_year.number} does not have both semesters!")
-            return redirect("crm_dashboard")
+            return redirect("dashboard")
 
         # Move back to the previous semester or year
         if current_semester == second_semester:
@@ -328,11 +511,11 @@ def reverse_semester_confirmationPage(request):
     if request.method == "POST":
         return redirect("reverse_semester")  # Redirect to the actual move function
 
-    return render(request, "crm/crm_reverse_comfirmation_page.html")
+    return render(request, "crm/reverse_comfirmation_page.html")
 
 
 def semester_reverse_success(request):
-    return render(request, "crm/crm_reverse_semester_success.html")
+    return render(request, "crm/reverse_semester_success.html")
 
 
 
@@ -349,7 +532,7 @@ def Notify_student(request):
 
     notifications = paginate_notifications(request)
 
-    return render(request, "crm/crm_post_notification.html", {"form":form, "notifications":notifications})    
+    return render(request, "crm/post_notification.html", {"form":form, "notifications":notifications})    
 
 def paginate_notifications(request):
     """ Helper function to paginate headlines """
@@ -373,7 +556,7 @@ def Post_headline(request):
     # Paginate headlines
     headlines = paginate_headlines(request)
 
-    return render(request, "crm/crm_post_headline.html", {"form": form, "headlines": headlines})
+    return render(request, "crm/post_headline.html", {"form": form, "headlines": headlines})
 
 
 def paginate_headlines(request):
@@ -397,7 +580,7 @@ def Edit_headline(request, headline_id):
         form = HeadlineForm(instance=headline)
 
 
-    return render(request, "crm/crm_edit_post.html", {"form": form, "headline": headline})
+    return render(request, "crm/edit_post.html", {"form": form, "headline": headline})
 
 
 
@@ -417,7 +600,7 @@ def delete_headline(request, headline_id):
 def school_view(request):
     schools = School.objects.all()
 
-    return render(request, 'crm/crm_school_list.html', {'schools':schools})
+    return render(request, 'crm/school_list.html', {'schools':schools})
 
 def add_School(request):
     if request.method == "POST":
@@ -432,7 +615,7 @@ def add_School(request):
     # Paginate headlines
     schools = paginate_schools(request)
 
-    return render(request, "crm/crm_add_school.html", {"form": form, "schools": schools})
+    return render(request, "crm/add_school.html", {"form": form, "schools": schools})
 
 
 def paginate_schools(request):
@@ -446,7 +629,7 @@ def paginate_schools(request):
 def department_view(request):
     departments = Department.objects.all()
 
-    return render(request, 'crm/crm_department_list.html', {'departments':departments})
+    return render(request, 'crm/department_list.html', {'departments':departments})
 
 def add_department(request):
     if request.method == "POST":
@@ -461,7 +644,7 @@ def add_department(request):
     # Paginate headlines
     departments = paginate_departments(request)
 
-    return render(request, "crm/crm_add_department.html", {"form": form, "departments": departments})
+    return render(request, "crm/add_department.html", {"form": form, "departments": departments})
 
 def paginate_departments(request):
     """ Helper function to paginate headlines """
@@ -476,7 +659,7 @@ def paginate_departments(request):
 def course_view(request):
     courses = Course.objects.all()
 
-    return render(request, 'crm/crm_course_list.html', {'courses':courses})
+    return render(request, 'crm/course_list.html', {'courses':courses})
 
 def add_course(request):
     schools = School.objects.all()
@@ -524,7 +707,7 @@ def add_course(request):
         "semesters": semesters,
         "courses_by_year_semester": courses_by_year_semester,
     }
-    return render(request, "crm/crm_add_course.html", context)
+    return render(request, "crm/add_course.html", context)
 
 
 def load_departments(request):
@@ -561,7 +744,7 @@ def add_grade(request):
         "courses": courses,
         "students": students
     }
-    return render(request, "crm/crm_add_grade.html", context)
+    return render(request, "crm/add_grade.html", context)
 
 
 def edit_grade(request, grade_id):

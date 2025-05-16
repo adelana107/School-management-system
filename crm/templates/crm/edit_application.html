@@ -14,7 +14,7 @@
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="{% static 'css/edit_application.css' %}">
+        <link rel="stylesheet" href="{% static 'crm/css/edit_application.css' %}">
 
 
 </head>
@@ -199,109 +199,8 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-    <script>
-    $(document).ready(function () {
-        // Initialize Select2
-        $('.select2').select2({
-            theme: 'bootstrap-5',
-            width: '100%'
-        });
+    <script src="{% static 'crm/js/edit_application.js' %}"></script>
 
-        // Function to load LGAs
-        function loadLGAs(stateId, selectedLGAId = null) {
-            const lgaSelect = $('#id_local_government');
-            
-            if (stateId) {
-                lgaSelect.prop('disabled', true);
-                $.getJSON('{% url "get_lgas" %}', {state_id: stateId})
-                    .done(function(data) {
-                        lgaSelect.empty().append('<option value="">---------</option>');
-                        $.each(data, function(index, lga) {
-                            const selected = selectedLGAId && (lga.id == selectedLGAId);
-                            lgaSelect.append($('<option>', {
-                                value: lga.id,
-                                text: lga.name,
-                                selected: selected
-                            }));
-                        });
-                        lgaSelect.prop('disabled', false);
-                    })
-                    .fail(function(jqXHR, textStatus, errorThrown) {
-                        console.error("Failed to load LGAs:", textStatus, errorThrown);
-                        lgaSelect.prop('disabled', false);
-                    });
-            } else {
-                lgaSelect.empty().append('<option value="">---------</option>');
-                lgaSelect.prop('disabled', true);
-            }
-        }
-
-        // Function to load departments
-        function loadDepartments(schoolId, selectedDeptId = null) {
-            const deptSelect = $('#id_department');
-            
-            if (schoolId) {
-                deptSelect.prop('disabled', true);
-                $.getJSON('{% url "get_departments" %}', {school_id: schoolId})
-                    .done(function(data) {
-                        deptSelect.empty().append('<option value="">---------</option>');
-                        $.each(data, function(index, dept) {
-                            const selected = selectedDeptId && (dept.id == selectedDeptId);
-                            deptSelect.append($('<option>', {
-                                value: dept.id,
-                                text: dept.name,
-                                selected: selected
-                            }));
-                        });
-                        deptSelect.prop('disabled', false);
-                    })
-                    .fail(function(jqXHR, textStatus, errorThrown) {
-                        console.error("Failed to load departments:", textStatus, errorThrown);
-                        deptSelect.prop('disabled', false);
-                    });
-            } else {
-                deptSelect.empty().append('<option value="">---------</option>');
-                deptSelect.prop('disabled', true);
-            }
-        }
-
-        // Load LGAs when state changes
-        $('#id_state_of_origin').on('change', function() {
-            const stateId = $(this).val();
-            loadLGAs(stateId);
-        });
-
-        // Load departments when school changes
-        $('#id_school').on('change', function() {
-            const schoolId = $(this).val();
-            loadDepartments(schoolId);
-        });
-
-        // Profile picture preview
-        $('#id_profile_picture').change(function() {
-            if (this.files && this.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    $('#profile-preview').attr('src', e.target.result);
-                }
-                reader.readAsDataURL(this.files[0]);
-            }
-        });
-
-        // Initialize form with existing values
-        const stateId = $('#id_state_of_origin').val();
-        const schoolId = $('#id_school').val();
-        const currentLGAId = $('#current_lga').val();
-        const currentDeptId = $('#current_dept').val();
-
-        if (stateId) {
-            loadLGAs(stateId, currentLGAId);
-        }
-        
-        if (schoolId) {
-            loadDepartments(schoolId, currentDeptId);
-        }
-    });
-    </script>
+  
 </body>
 </html>
