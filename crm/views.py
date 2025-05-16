@@ -273,6 +273,7 @@ def search_applications(request):
 
 def applicant_list(request):
     applications = Application.objects.all()
+    total_applications = Application.objects.count()
 
     # Group applications by school and department
     grouped_applications = {}
@@ -287,7 +288,7 @@ def applicant_list(request):
 
         grouped_applications[school][department].append(app)
 
-    return render(request, "crm/applicant_list.html", {"grouped_applications": grouped_applications})
+    return render(request, "crm/applicant_list.html", {"grouped_applications": grouped_applications, 'total_applications': total_applications})
 
 
 def get_departments(request):
@@ -308,6 +309,7 @@ def get_lgas(request):
 
 def edit_application(request, application_id):
     applicant = get_object_or_404(Application, id=application_id)
+    total_applications = Application.objects.count()
     
     if request.method == 'POST':
         form = ApplicationForm(request.POST, request.FILES, instance=applicant)
@@ -325,11 +327,13 @@ def edit_application(request, application_id):
         'form': form,
         'schools': schools,
         'states': states,
+        'total_applications': total_applications,
     }
     return render(request, "crm/edit_application.html", context)
 
 def student_list(request):
     students = Student.objects.all()
+    total_applications = Application.objects.count()
 
     # Group students by school and department
     grouped_students = {}
@@ -344,12 +348,13 @@ def student_list(request):
 
         grouped_students[school][department].append(student)
 
-    return render(request, "crm/student_list.html", {"grouped_students": grouped_students})
+    return render(request, "crm/student_list.html", {"grouped_students": grouped_students, 'total_applications': total_applications})
 
 
 
 def edit_student(request, student_id):
     student = get_object_or_404(Student, id=student_id)
+    total_applications = Application.objects.count()
     if request.method == "POST":
         form = StudentForm(request.POST, request.FILES, instance=student)
         if form.is_valid():
@@ -358,19 +363,21 @@ def edit_student(request, student_id):
     else:
         form = StudentForm(instance=student)
     
-    return render(request, "crm/edit_student.html", {"form": form, "student": student})
+    return render(request, "crm/edit_student.html", {"form": form, "student": student, 'total_applications': total_applications})
 
 
 
 def view_applicant(request, application_id):
     applicant = get_object_or_404(Application, id=application_id)
-    return render(request, "crm/applicant_profile.html", {"applicant": applicant})
+    total_applications = Application.objects.count()
+    return render(request, "crm/applicant_profile.html", {"applicant": applicant, 'total_applications': total_applications})
 
 
 
 def view_student(request, student_id):
     student = get_object_or_404(Student, id=student_id)
-    return render(request, "crm/student_profile.html", {"student": student})
+    total_applications = Application.objects.count()
+    return render(request, "crm/student_profile.html", {"student": student, 'total_applications': total_applications})
 
 
 
@@ -432,6 +439,7 @@ def revoke_application(request, application_id):
 
 def move_to_new_semester(request):
     students = Student.objects.all()
+    
 
     for student in students:
         current_year = student.year
@@ -520,6 +528,7 @@ def semester_reverse_success(request):
 
 
 def Notify_student(request):
+    total_applications = Application.objects.count()
     if request.method == "POST":
         form = NotificationForm(request.POST, request.FILES)
         if form.is_valid():
@@ -532,7 +541,7 @@ def Notify_student(request):
 
     notifications = paginate_notifications(request)
 
-    return render(request, "crm/post_notification.html", {"form":form, "notifications":notifications})    
+    return render(request, "crm/post_notification.html", {"form":form, "notifications":notifications, 'total_applications': total_applications})    
 
 def paginate_notifications(request):
     """ Helper function to paginate headlines """
@@ -544,6 +553,7 @@ def paginate_notifications(request):
 
 
 def Post_headline(request):
+    total_applications = Application.objects.count()
     if request.method == "POST":
         form = HeadlineForm(request.POST, request.FILES)
         if form.is_valid():
@@ -556,7 +566,7 @@ def Post_headline(request):
     # Paginate headlines
     headlines = paginate_headlines(request)
 
-    return render(request, "crm/post_headline.html", {"form": form, "headlines": headlines})
+    return render(request, "crm/post_headline.html", {"form": form, "headlines": headlines, 'total_applications': total_applications})
 
 
 def paginate_headlines(request):
@@ -569,6 +579,7 @@ def paginate_headlines(request):
 
 def Edit_headline(request, headline_id):
     headline = get_object_or_404(Headline, id=headline_id)
+    total_applications = Application.objects.count()
 
     if request.method == "POST":
         form = HeadlineForm(request.POST, request.FILES, instance=headline)
@@ -580,7 +591,7 @@ def Edit_headline(request, headline_id):
         form = HeadlineForm(instance=headline)
 
 
-    return render(request, "crm/edit_post.html", {"form": form, "headline": headline})
+    return render(request, "crm/edit_post.html", {"form": form, "headline": headline, 'total_applications': total_applications})
 
 
 
@@ -599,10 +610,12 @@ def delete_headline(request, headline_id):
 
 def school_view(request):
     schools = School.objects.all()
+    total_applications = Application.objects.count()
 
-    return render(request, 'crm/school_list.html', {'schools':schools})
+    return render(request, 'crm/school_list.html', {'schools':schools, 'total_applications': total_applications})
 
 def add_School(request):
+    total_applications = Application.objects.count()
     if request.method == "POST":
         form = SchoolForm(request.POST, request.FILES)
         if form.is_valid():
@@ -615,7 +628,7 @@ def add_School(request):
     # Paginate headlines
     schools = paginate_schools(request)
 
-    return render(request, "crm/add_school.html", {"form": form, "schools": schools})
+    return render(request, "crm/add_school.html", {"form": form, "schools": schools, 'total_applications': total_applications})
 
 
 def paginate_schools(request):
@@ -628,10 +641,12 @@ def paginate_schools(request):
 
 def department_view(request):
     departments = Department.objects.all()
+    total_applications = Application.objects.count()
 
-    return render(request, 'crm/department_list.html', {'departments':departments})
+    return render(request, 'crm/department_list.html', {'departments':departments, 'total_applications': total_applications})
 
 def add_department(request):
+    total_applications = Application.objects.count()
     if request.method == "POST":
         form = DepartmentForm(request.POST, request.FILES)
         if form.is_valid():
@@ -644,7 +659,7 @@ def add_department(request):
     # Paginate headlines
     departments = paginate_departments(request)
 
-    return render(request, "crm/add_department.html", {"form": form, "departments": departments})
+    return render(request, "crm/add_department.html", {"form": form, "departments": departments, 'total_applications': total_applications})
 
 def paginate_departments(request):
     """ Helper function to paginate headlines """
@@ -658,13 +673,15 @@ def paginate_departments(request):
 
 def course_view(request):
     courses = Course.objects.all()
+    total_applications = Application.objects.count()
 
-    return render(request, 'crm/course_list.html', {'courses':courses})
+    return render(request, 'crm/course_list.html', {'courses':courses, 'total_applications': total_applications})
 
 def add_course(request):
     schools = School.objects.all()
     departments = Department.objects.all()
     semesters = Semester.objects.all().order_by('-year', 'name')
+    total_applications = Application.objects.count()
     
     if request.method == "POST":
         form = CourseForm(request.POST, request.FILES)
@@ -706,6 +723,7 @@ def add_course(request):
         "departments": departments,
         "semesters": semesters,
         "courses_by_year_semester": courses_by_year_semester,
+        'total_applications': total_applications,
     }
     return render(request, "crm/add_course.html", context)
 
@@ -724,6 +742,7 @@ def add_grade(request):
     semesters = Semester.objects.all().order_by('-year', 'name')
     courses = Course.objects.all()
     students = Student.objects.all()
+    total_applications = Application.objects.count()
 
     if request.method == "POST":
         form = GradeForm(request.POST, request.FILES)
@@ -742,13 +761,15 @@ def add_grade(request):
         "departments": departments,
         "semesters": semesters,
         "courses": courses,
-        "students": students
+        "students": students,
+        'total_applications': total_applications,
     }
     return render(request, "crm/add_grade.html", context)
 
 
 def edit_grade(request, grade_id):
     grade = get_object_or_404(Grade, id=grade_id)
+    total_applications = Application.objects.count()
 
     if request.method == "POST":
         form = GradeForm(request.POST, request.FILES, instance=grade)
@@ -759,12 +780,14 @@ def edit_grade(request, grade_id):
     else:
         form = GradeForm(instance=grade)
 
-    return render(request, "crm/edit_grade.html", {"form": form, "grade": grade})
+    return render(request, "crm/edit_grade.html", {"form": form, "grade": grade, 'total_applications': total_applications})
 
 
 def grade_list(request):
     grades = Grade.objects.select_related('student', 'course', 'semester').order_by('student__surname')
-    return render(request, 'crm/grade_list.html', {'grades': grades})
+    total_applications = Application.objects.count()
+    
+    return render(request, 'crm/grade_list.html', {'grades': grades, 'total_applications': total_applications})
 
 
 
