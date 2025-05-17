@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 import json
+from django.utils.timezone import now
 
 
 
@@ -380,19 +381,27 @@ def view_student(request, student_id):
     return render(request, "crm/student_profile.html", {"student": student, 'total_applications': total_applications})
 
 
+def generate_matric_number():
+    year = now().year
+    prefix = "FT"  # Adjust based on program if needed
+    count = Student.objects.filter(matric_number__startswith=f"{prefix}{year}").count() + 1
+    return f"{prefix}{year}{count:03d}"
 
 def approve_application(request, application_id):
     application = get_object_or_404(Application, id=application_id)
 
-    # Check if a student with the same application number already exists
+    # Check if a student already exists
     if Student.objects.filter(application_number=application.application_number).exists():
         messages.warning(request, f"Student with application number {application.application_number} already exists!")
         return redirect("applicant_list")
 
+    # ✅ Generate matric number before creating the student
+    matric_number = generate_matric_number()
 
-    # Create Student record
+    # Create Student record with matric_number
     student = Student.objects.create(
         application_number=application.application_number,
+        matric_number=matric_number,
         surname=application.surname,
         first_name=application.first_name,
         other_name=application.other_name,
@@ -406,16 +415,15 @@ def approve_application(request, application_id):
         department=application.department,
         academic_session=application.academic_session,
         profile_picture=application.profile_picture,
-        year = application.year,
-        semester = application.semester,
-    
+        year=application.year,
+        semester=application.semester,
     )
 
     # Mark application as approved
     application.is_approved = True
     application.save()
 
-    messages.success(request, f"Application {application.application_number} has been approved and student created.")
+    messages.success(request, f"Application {application.application_number} has been approved. Matric number: {matric_number}")
     return redirect("applicant_list")
 
 

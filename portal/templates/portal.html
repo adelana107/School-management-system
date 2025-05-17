@@ -28,7 +28,7 @@
                     <h1 class="fw-bold mb-2" style="font-size: 2rem; color: var(--dark);">Welcome back, {{ student.surname }}!</h1>
                     <p class="lead text-muted mb-0">
                         {% now "F j, Y" %} • 
-                        <span class="badge bg-primary">{{ student.program|default:"Undergraduate" }}</span>
+                        <span class="badge bg-primary">{{ student.matric_number}}</span>
                         {% if student.department %}
                         <span class="badge bg-info ms-2">{{ student.department }}</span>
                         {% endif %}

@@ -22,7 +22,7 @@ urlpatterns = [
 
     # Student Portal
     path('student-portal-login/', views.student_login, name='student_login'),
-    path('student-portal/', views.student_portal, name='student_portal'),
+    path('student-portal/', views.student_portal, name='portal'),
     path('student-biodata/', views.student_biodata, name='student_biodata'),
 
     # Course Registration

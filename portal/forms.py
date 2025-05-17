@@ -212,6 +212,6 @@ class ApplicantLoginForm(forms.Form):
 
 
 class StudentLoginForm(forms.Form):
-    application_number = forms.CharField(label="Application Number", max_length=20)
+    application_number = forms.CharField(label="Application Number or Matric Number", max_length=20)
     surname = forms.CharField(label="Surname", widget=forms.PasswordInput)
 

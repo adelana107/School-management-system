@@ -139,6 +139,7 @@ LOGIN_URL = 'crm_login'
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default authentication
+    'portal.backends.ApplicationOrMatricAuthBackend',
 ]
 
 MEDIA_URL = "/media/"

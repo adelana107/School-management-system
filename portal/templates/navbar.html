@@ -19,7 +19,7 @@
         <div class="container-fluid">
             <!-- Brand with condensed student info -->
             <div class="d-flex align-items-center">
-                <a class="navbar-brand me-3" href="{% url 'student_portal' %}">
+                <a class="navbar-brand me-3" href="{% url 'portal' %}">
                     <i class="fas fa-graduation-cap"></i> Student Portal
                 </a>
                 
@@ -99,7 +99,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/student-portal/' %}active{% endif %}" href="{% url 'student_portal' %}">
+                        <a class="nav-link {% if request.path == '/student-portal/' %}active{% endif %}" href="{% url 'portal' %}">
                             <i class="fas fa-home"></i> Dashboard
                         </a>
                     </li>

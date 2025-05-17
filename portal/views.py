@@ -150,7 +150,7 @@ def applicant_profile(request):
 
 
 
-@login_required
+@login_required(login_url="portal")
 def student_portal(request):
     user = request.user
     student = Student.objects.filter(application_number=user.username).first()

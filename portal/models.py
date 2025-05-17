@@ -120,7 +120,10 @@ class Application(models.Model):
         if not self.application_number:
             count = Application.objects.count() + 1
             self.application_number = f"A2025{count:03d}"
+            count = Student.objects.count() + 1
         super().save(*args, **kwargs)
+    def __str__(self):
+        return f"{self.application_number} - {self.surname} {self.first_name}"    
 
     def approve(self):
         """Transfers application data to Student model upon approval."""
@@ -167,6 +170,7 @@ class Student(models.Model):
     school = models.ForeignKey(School, on_delete=models.CASCADE)
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
     application_number = models.CharField(max_length=10, unique=True, blank=True)
+    matric_number = models.CharField(max_length=10, unique=True, blank=True, null=True)
     profile_picture = models.ImageField(upload_to="profile_pics/", blank=True, null=True, default="profile_pics/default-profile.png")
     academic_session = models.ForeignKey(AcademicSession, on_delete=models.CASCADE, related_name="students")
     created_at = models.DateTimeField(default=now, editable=True)
@@ -175,7 +179,7 @@ class Student(models.Model):
     
 
     def __str__(self):
-        return f"{self.surname} ({self.application_number})"
+        return f"{self.matric_number} ({self.surname}) ({self.other_name})"
 
     def calculate_cgpa(self):
         grades = self.grades.filter(course__semester__year=self.year) 
