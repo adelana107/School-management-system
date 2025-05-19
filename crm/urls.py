@@ -5,7 +5,7 @@ from .views import (
     Crmlogin, view_student, move_to_new_semester, move_to_previous_semester, move_semester_confirmationPage,
     semester_success, reverse_semester_confirmationPage, semester_reverse_success, Post_headline, Edit_headline, delete_headline,
     school_view, Notify_student, add_School, department_view, add_department, course_view, add_course,  load_departments, load_courses, add_grade, grade_list,
-    edit_grade, get_departments, get_lgas, chart_data, update_application_status, search_applications
+    edit_grade, get_departments, get_lgas, chart_data, update_application_status, search_applications, pending_list
 )
 
 urlpatterns = [
@@ -77,4 +77,8 @@ urlpatterns = [
 
 
     path('ajax/load-departments/', load_departments, name='ajax_load_departments'),
+
+    #pending list
+
+    path('pending/', pending_list, name='pending_list'),
 ]

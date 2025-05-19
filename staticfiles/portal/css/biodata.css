@@ -1,0 +1,270 @@
+:root {
+    --primary: #4361ee;
+    --primary-light: #eef2ff;
+    --secondary: #6c757d;
+    --success: #2ecc71;
+    --info: #00b4d8;
+    --warning: #f39c12;
+    --danger: #e74c3c;
+    --light: #f8f9fa;
+    --dark: #2c3e50;
+    --border-radius: 12px;
+    --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+}
+
+body {
+    background-color: #f5f7fb;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--dark);
+    padding-top: 70px;
+    line-height: 1.6;
+}
+
+.content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.header-title {
+    color: var(--dark);
+    font-weight: 600;
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+}
+
+.header-title i {
+    color: var(--primary);
+    margin-right: 12px;
+    font-size: 1.5rem;
+}
+
+/* Bio-data Card Styling */
+.bio-data-card {
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+    transition: var(--transition);
+    border: none;
+}
+
+.bio-data-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.bio-data-header {
+    background: linear-gradient(135deg, var(--primary) 0%, #3a0ca3 100%);
+    color: white;
+    padding: 25px;
+    text-align: center;
+    position: relative;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.bio-data-header h3 {
+    font-weight: 600;
+    margin: 0;
+    font-size: 1.8rem;
+    letter-spacing: 0.5px;
+}
+
+.university-logo {
+    height: 80px;
+    margin-bottom: 15px;
+    border-radius: 50%;
+    border: 3px solid white;
+    object-fit: cover;
+    width: 80px;
+}
+
+.bio-data-body {
+    padding: 30px 40px;
+}
+
+/* Info Table Styling */
+.info-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.info-table th {
+    width: 220px;
+    color: var(--secondary);
+    font-weight: 500;
+    padding: 12px 15px;
+    vertical-align: top;
+}
+
+.info-table td {
+    padding: 12px 15px;
+    font-weight: 500;
+    color: var(--dark);
+    background-color: var(--primary-light);
+    border-radius: 8px;
+}
+
+.info-table tr:hover td {
+    background-color: #e2e7ff;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.btn-primary:hover {
+    background-color: #3a0ca3;
+    transform: translateY(-2px);
+}
+
+/* Signature Area Styling */
+.signature-area {
+    margin-top: 50px;
+    padding-top: 30px;
+    border-top: 2px dashed #e0e0e0;
+}
+
+.signature-line {
+    width: 300px;
+    height: 2px;
+    background-color: var(--dark);
+    margin: 0 auto;
+    position: relative;
+}
+
+.signature-line:after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: var(--dark);
+    opacity: 0.3;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+.status-badge i {
+    margin-right: 5px;
+    font-size: 0.7rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .bio-data-body {
+        padding: 20px;
+    }
+    
+    .info-table th, 
+    .info-table td {
+        display: block;
+        width: 100%;
+        padding: 10px;
+    }
+    
+    .info-table th {
+        padding-bottom: 5px;
+        background-color: transparent;
+    }
+    
+    .info-table td {
+        margin-bottom: 15px;
+    }
+    
+    .signature-line {
+        width: 200px;
+    }
+    
+    .header-title {
+        font-size: 1.5rem;
+    }
+}
+
+/* Print Styles */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    
+    #printable-area, #printable-area * {
+        visibility: visible;
+    }
+    
+    #printable-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .bio-data-header {
+        background: var(--primary) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        page-break-after: avoid;
+    }
+    
+    .bio-data-body {
+        padding: 20px 0 !important;
+    }
+    
+    .info-table th, 
+    .info-table td {
+        padding: 8px 10px !important;
+        page-break-inside: avoid;
+    }
+    
+    .signature-area {
+        margin-top: 30px;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+}
+
+/* Animation */
+.animate-fade-in {
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* QR Code Section */
+.qr-code-container {
+    display: flex;
+    justify-content: center;
+    margin: 30px 0;
+}
+
+.qr-code {
+    padding: 15px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eee;
+}

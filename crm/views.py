@@ -64,6 +64,8 @@ def crm_dashboard(request):
     total_departments = Department.objects.count()
     pending_applications = Application.objects.filter(is_approved=False).count()
     admitted_students = Student.objects.count()
+    approved_applications = Application.objects.filter(is_approved=True).count()
+    total_pending_application = Application.objects.filter(is_approved=False).count()
 
     # Applications by month
     applications_by_month = (
@@ -110,6 +112,8 @@ def crm_dashboard(request):
         "months": json.dumps(months),
         "application_counts": json.dumps(application_counts),
         "student_counts": json.dumps(student_counts),
+        "approved_applications":approved_applications,
+        "total_pending_application": total_pending_application
     }
     return render(request, "crm/dashboard.html", context)
 
@@ -275,6 +279,7 @@ def search_applications(request):
 def applicant_list(request):
     applications = Application.objects.all()
     total_applications = Application.objects.count()
+    total_pending_application = Application.objects.filter(is_approved=False).count()
 
     # Group applications by school and department
     grouped_applications = {}
@@ -289,8 +294,27 @@ def applicant_list(request):
 
         grouped_applications[school][department].append(app)
 
-    return render(request, "crm/applicant_list.html", {"grouped_applications": grouped_applications, 'total_applications': total_applications})
+    return render(request, "crm/applicant_list.html", {"grouped_applications": grouped_applications, 'total_pending_application': total_pending_application, 'total_applications': total_applications})
 
+
+def pending_list(request):
+    pending_applications = Application.objects.filter(is_approved=False)
+    total_applications = Application.objects.count()
+    total_pending_application = Application.objects.filter(is_approved=False).count()
+    # Group applications by school and department
+    grouped_applications = {}
+    for app in pending_applications:
+        school = app.school.name
+        department = app.department.name
+
+        if school not in grouped_applications:
+            grouped_applications[school] = {}
+        if department not in grouped_applications[school]:  # Fixed variable case
+            grouped_applications[school][department] = []
+
+        grouped_applications[school][department].append(app)
+
+    return render(request, "crm/pending_list.html", {"grouped_applications": grouped_applications, 'total_pending_application':total_pending_application, 'total_applications': total_applications})
 
 def get_departments(request):
     school_id = request.GET.get('school_id')
@@ -311,6 +335,7 @@ def get_lgas(request):
 def edit_application(request, application_id):
     applicant = get_object_or_404(Application, id=application_id)
     total_applications = Application.objects.count()
+    total_pending_application = Application.objects.filter(is_approved=False).count()
     
     if request.method == 'POST':
         form = ApplicationForm(request.POST, request.FILES, instance=applicant)
@@ -329,12 +354,14 @@ def edit_application(request, application_id):
         'schools': schools,
         'states': states,
         'total_applications': total_applications,
+        'total_pending_application': total_pending_application,
     }
     return render(request, "crm/edit_application.html", context)
 
 def student_list(request):
     students = Student.objects.all()
     total_applications = Application.objects.count()
+    total_pending_application = Application.objects.filter(is_approved=False).count()
 
     # Group students by school and department
     grouped_students = {}
@@ -349,7 +376,7 @@ def student_list(request):
 
         grouped_students[school][department].append(student)
 
-    return render(request, "crm/student_list.html", {"grouped_students": grouped_students, 'total_applications': total_applications})
+    return render(request, "crm/student_list.html", {"grouped_students": grouped_students, 'total_pending_application': total_pending_application, 'total_applications': total_applications})
 
 
 
@@ -371,14 +398,16 @@ def edit_student(request, student_id):
 def view_applicant(request, application_id):
     applicant = get_object_or_404(Application, id=application_id)
     total_applications = Application.objects.count()
-    return render(request, "crm/applicant_profile.html", {"applicant": applicant, 'total_applications': total_applications})
+    total_pending_application = Application.objects.filter(is_approved=False).count()
+    return render(request, "crm/applicant_profile.html", {"applicant": applicant,'total_pending_application': total_pending_application, 'total_applications': total_applications})
 
 
 
 def view_student(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     total_applications = Application.objects.count()
-    return render(request, "crm/student_profile.html", {"student": student, 'total_applications': total_applications})
+    total_pending_application = Application.objects.filter(is_approved=False).count()
+    return render(request, "crm/student_profile.html", {"student": student, 'total_pending_application':total_pending_application, 'total_applications': total_applications})
 
 
 def generate_matric_number():
@@ -537,6 +566,7 @@ def semester_reverse_success(request):
 
 def Notify_student(request):
     total_applications = Application.objects.count()
+    total_pending_application = Application.objects.filter(is_approved=False).count()
     if request.method == "POST":
         form = NotificationForm(request.POST, request.FILES)
         if form.is_valid():
@@ -549,7 +579,7 @@ def Notify_student(request):
 
     notifications = paginate_notifications(request)
 
-    return render(request, "crm/post_notification.html", {"form":form, "notifications":notifications, 'total_applications': total_applications})    
+    return render(request, "crm/post_notification.html", {"form":form, "notifications":notifications, 'total_pending_application': total_pending_application, 'total_applications': total_applications})    
 
 def paginate_notifications(request):
     """ Helper function to paginate headlines """
@@ -562,6 +592,7 @@ def paginate_notifications(request):
 
 def Post_headline(request):
     total_applications = Application.objects.count()
+    total_pending_application = Application.objects.filter(is_approved=False).count()
     if request.method == "POST":
         form = HeadlineForm(request.POST, request.FILES)
         if form.is_valid():
@@ -574,7 +605,7 @@ def Post_headline(request):
     # Paginate headlines
     headlines = paginate_headlines(request)
 
-    return render(request, "crm/post_headline.html", {"form": form, "headlines": headlines, 'total_applications': total_applications})
+    return render(request, "crm/post_headline.html", {"form": form, "headlines": headlines, 'total_pending_application': total_pending_application, 'total_applications': total_applications})
 
 
 def paginate_headlines(request):
@@ -588,6 +619,7 @@ def paginate_headlines(request):
 def Edit_headline(request, headline_id):
     headline = get_object_or_404(Headline, id=headline_id)
     total_applications = Application.objects.count()
+    total_pending_application = Application.objects.filter(is_approved=False).count()
 
     if request.method == "POST":
         form = HeadlineForm(request.POST, request.FILES, instance=headline)
@@ -599,7 +631,7 @@ def Edit_headline(request, headline_id):
         form = HeadlineForm(instance=headline)
 
 
-    return render(request, "crm/edit_post.html", {"form": form, "headline": headline, 'total_applications': total_applications})
+    return render(request, "crm/edit_post.html", {"form": form, "headline": headline, 'total_pending_application': total_pending_application, 'total_applications': total_applications})
 
 
 

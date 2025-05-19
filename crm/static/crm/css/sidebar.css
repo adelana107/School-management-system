@@ -730,6 +730,17 @@ body::before, body::after {
   background: var(--coral-soft);
 }
 
+.menu-badge.badge-pending {
+    background: var(--sidebar-warning);
+    color: #2d3748; /* Dark text for better contrast on yellow */
+}
+
+.fa-hourglass-half {
+    color: var(--sidebar-warning);
+    opacity: 0.9;
+}
+
+
 /* Dark Mode (Night Shift Optimized) */
 .dark-mode {
   --sidebar-bg: #1a2431;

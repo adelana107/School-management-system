@@ -45,6 +45,13 @@
                         <span class="menu-badge">{{ total_applications}}</span>
                     </a>
                 </li>
+                <li class="menu-item">
+    <a href="{% url 'pending_list' %}" class="menu-link" data-tooltip="Pending Applications">
+        <span class="menu-icon"><i class="fas fa-hourglass-half"></i></span>
+        <span class="menu-text">Pending Applications</span>
+        <span class="menu-badge badge-warning">{{ total_pending_application }}</span>
+    </a>
+</li>
 
                 <li class="menu-item">
                     <a href="{% url 'student_list' %}" class="menu-link" data-tooltip="Students">
