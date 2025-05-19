@@ -1,0 +1,165 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OceanView Admin</title>
+    <meta name="theme-color" content="#1e3a5f">
+    <meta name="color-scheme" content="light dark">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'crm/css/sidebar.css' %}">
+
+</head>
+<body>
+    <div class="sidebar-container">
+        <div class="sidebar">
+            <!-- Logo and Brand -->
+            <div class="sidebar-header">
+                <div class="brand-wrapper">
+                    <i class="fas fa-water brand-icon"></i>
+                    <h3 class="brand-text">OceanView</h3>
+                    <span class="badge badge-admin">ADMIN</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <!-- Navigation Menu -->
+            <ul class="sidebar-menu">
+                <li class="menu-item active">
+                    <a href="{% url 'dashboard' %}" class="menu-link" data-tooltip="Dashboard">
+                        <span class="menu-icon"><i class="fas fa-home"></i></span>
+                        <span class="menu-text">Dashboard</span>
+                    </a>
+                </li>
+                
+                <li class="menu-item">
+                    <a href="{% url 'applicant_list' %}" class="menu-link" data-tooltip="Applications">
+                        <span class="menu-icon"><i class="fas fa-file-alt"></i></span>
+                        <span class="menu-text">Applications</span>
+                        <span class="menu-badge">{{ total_applications}}</span>
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a href="{% url 'student_list' %}" class="menu-link" data-tooltip="Students">
+                        <span class="menu-icon"><i class="fas fa-user-graduate"></i></span>
+                        <span class="menu-text">Students</span>
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a href="{% url 'Post_headline' %}" class="menu-link" data-tooltip="Post Headline">
+                        <span class="menu-icon"><i class="fas fa-newspaper"></i></span>
+                        <span class="menu-text">Post Headline</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{% url 'Notify_student' %}" class="menu-link" data-tooltip="Send Notification">
+                        <span class="menu-icon"><i class="fas fa-paper-plane"></i></span>
+                        <span class="menu-text">Send Notification</span>
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a href="{% url 'school_list' %}" class="menu-link" data-tooltip="School">
+                        <span class="menu-icon"><i class="fas fa-school"></i></span>
+                        <span class="menu-text">School</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="{% url 'department_list' %}" class="menu-link" data-tooltip="Department">
+                        <span class="menu-icon"><i class="fas fa-book"></i></span>
+                        <span class="menu-text">Department</span>
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a href="{% url 'course_list' %}" class="menu-link" data-tooltip="Courses">
+                        <span class="menu-icon"><i class="fas fa-book-open"></i></span>
+                        <span class="menu-text">Courses</span>
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a href="{% url 'grade_list' %}" class="menu-link" data-tooltip="Grades">
+                        <span class="menu-icon"><i class="fas fa-graduation-cap"></i></span>
+                        <span class="menu-text">Grades</span>
+                    </a>
+                </li>
+                
+                <!-- Quick Actions Dropdown -->
+                <li class="menu-item has-submenu">
+                    <a href="#" class="menu-link" data-tooltip="Quick Actions">
+                        <span class="menu-icon"><i class="fas fa-bolt"></i></span>
+                        <span class="menu-text">Quick Actions</span>
+                        <span class="menu-badge badge-urgent">3</span>
+                        <span class="menu-arrow"><i class="fas fa-chevron-down"></i></span>
+                    </a>
+                    <ul class="submenu">
+                        <li class="submenu-item priority-high">
+                            <a href="{% url 'confirmation_page' %}">
+                                <i class="fas fa-arrow-circle-up"></i>
+                                <span>Move to Next Semester</span>
+                                <span class="submenu-badge">2</span>
+                            </a>
+                        </li>
+                        <li class="submenu-item priority-medium">
+                            <a href="{% url 'reverse_confirmation_page' %}">
+                                <i class="fas fa-arrow-circle-down"></i>
+                                <span>Reverse Semester</span>
+                                <span class="submenu-badge">5</span>
+                            </a>
+                        </li>
+                        <li class="submenu-item priority-low">
+                            <a href="#">
+                                <i class="fas fa-bell"></i>
+                                <span>System Alerts</span>
+                                <span class="submenu-badge">1</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+
+            <!-- Settings Section -->
+            <div class="sidebar-footer">
+                <div class="settings-menu">
+                    <div class="dark-mode-toggle" onclick="toggleDarkMode()">
+                        <div class="toggle-icon">
+                            <i id="darkModeIcon" class="fas fa-moon"></i>
+                        </div>
+                        <span id="darkModeText">Dark Mode</span>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="darkModeSwitch">
+                            <label for="darkModeSwitch"></label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- User Profile -->
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <img src="{% static 'images/default-avatar.png' %}" alt="User Avatar">
+                    </div>
+                    <div class="user-info">
+                        <span class="user-name">Admin User</span>
+                        <span class="user-role">Super Admin</span>
+                    </div>
+                    <div class="user-actions">
+                        <a href="#"><i class="fas fa-cog"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+<script src="{% static 'crm/js/sidebar.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oceanview University - Excellence in Education</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'portal/css/home.css' %}">
+    
+</head>
+<body>
+    <!-- Header -->
+    <header class="sticky-top">
+        <nav class="navbar navbar-expand-lg navbar-dark">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center" href="/">
+                    <img src="{% static 'images/university-logo.png' %}" alt="Oceanview University Logo" class="img-fluid" onerror="this.src='https://via.placeholder.com/150x50?text=Oceanview'">
+                    <span class="d-none d-md-inline ms-2">Oceanview University</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#programs">Programs</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#admissions">Admissions</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#news">News</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                    </ul>
+                    <a href="{% url 'application_create' %}" class="btn btn-cta ms-lg-3">Apply Now</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8 mx-auto text-center" data-aos="fade-up">
+                    <h1>Shape Your Future With Oceanview</h1>
+                    <p class="lead">Join a community of innovators, thinkers, and leaders at one of the nation's premier institutions</p>
+                    <div class="d-flex flex-wrap justify-content-center gap-3 hero-buttons">
+                        <a href="{% url 'application_create' %}" class="btn btn-primary btn-lg hero-btn">
+                            <i class="fas fa-arrow-right me-2"></i> Apply Now
+                        </a>
+                        <a href="#programs" class="btn btn-outline-light btn-lg hero-btn">
+                            <i class="fas fa-search me-2"></i> Explore Programs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container my-5">
+        <!-- Quick Actions -->
+        <section class="mb-5 py-4" data-aos="fade-up">
+            <h2 class="text-center section-title">University Portal</h2>
+            <div class="row g-4 mt-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="card action-card">
+                        <div class="card-body text-center p-4">
+                            <div class="action-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <h3 class="h5">New Application</h3>
+                            <p class="text-muted mb-3">Begin your journey with Oceanview University</p>
+                            <a href="{% url 'application_create' %}" class="btn btn-primary stretched-link">Apply Now</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card action-card">
+                        <div class="card-body text-center p-4">
+                            <div class="action-icon">
+                                <i class="fas fa-sign-in-alt"></i>
+                            </div>
+                            <h3 class="h5">Applicant Login</h3>
+                            <p class="text-muted mb-3">Continue your application process</p>
+                            <a href="{% url 'applicant_login' %}" class="btn btn-success stretched-link">Sign In</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card action-card">
+                        <div class="card-body text-center p-4">
+                            <div class="action-icon">
+                                <i class="fas fa-newspaper"></i>
+                            </div>
+                            <h3 class="h5">Campus News</h3>
+                            <p class="text-muted mb-3">Stay updated with university events</p>
+                            <a href="{% url 'headline_news' %}" class="btn btn-warning stretched-link">View News</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card action-card">
+                        <div class="card-body text-center p-4">
+                            <div class="action-icon">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
+                            <h3 class="h5">Student Portal</h3>
+                            <p class="text-muted mb-3">Access your academic resources</p>
+                            <a href="{% url 'student_login' %}" class="btn btn-secondary stretched-link">Student Login</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="stats-section rounded-3 my-5" data-aos="fade-up">
+            <div class="container">
+                <div class="row text-center">
+                    <div class="col-md-3 col-6 mb-4 mb-md-0">
+                        <div class="stat-number">95%</div>
+                        <p class="text-uppercase small mb-0">Graduation Rate</p>
+                    </div>
+                    <div class="col-md-3 col-6 mb-4 mb-md-0">
+                        <div class="stat-number">150+</div>
+                        <p class="text-uppercase small mb-0">Academic Programs</p>
+                    </div>
+                    <div class="col-md-3 col-6 mb-4 mb-md-0">
+                        <div class="stat-number">10:1</div>
+                        <p class="text-uppercase small mb-0">Student-Faculty Ratio</p>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="stat-number">85%</div>
+                        <p class="text-uppercase small mb-0">Employment Rate</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- News Section -->
+        <section class="my-5" id="news" data-aos="fade-up">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="section-title">Latest News</h2>
+                <a href="{% url 'headline_news' %}" class="btn btn-outline-primary">View All News</a>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card news-card">
+                        <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="News Image">
+                        <div class="card-body">
+                            <span class="badge bg-primary mb-2">Event</span>
+                            <h3 class="h5">Annual Science Symposium</h3>
+                            <p class="card-text">Join us for our premier scientific event featuring renowned researchers from around the world.</p>
+                            <a href="#" class="stretched-link">Read more</a>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0">
+                            <small class="text-muted">Posted 3 days ago</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card news-card">
+                        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="News Image">
+                        <div class="card-body">
+                            <span class="badge bg-success mb-2">Announcement</span>
+                            <h3 class="h5">Fall 2023 Admission Results</h3>
+                            <p class="card-text">Admission decisions for Fall 2023 have been released. Check your portal for updates.</p>
+                            <a href="#" class="stretched-link">Read more</a>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0">
+                            <small class="text-muted">Posted 1 week ago</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card news-card">
+                        <img src="https://images.unsplash.com/photo-1532094349884-543bc11b234d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="News Image">
+                        <div class="card-body">
+                            <span class="badge bg-warning text-dark mb-2">Research</span>
+                            <h3 class="h5">Breakthrough in Marine Biology</h3>
+                            <p class="card-text">Our researchers have discovered new marine species in the Pacific Ocean.</p>
+                            <a href="#" class="stretched-link">Read more</a>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0">
+                            <small class="text-muted">Posted 2 weeks ago</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4 mb-lg-0">
+                    <img src="{% static 'images/university-logo-white.png' %}" alt="Oceanview University Logo" class="footer-logo img-fluid" onerror="this.src='https://via.placeholder.com/150x50?text=Oceanview'">
+                    <p class="mt-3">Oceanview University is dedicated to academic excellence, innovation, and the development of future leaders.</p>
+                    <div class="social-icons mt-4">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 mb-4 mb-md-0">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#">Home</a></li>
+                        <li class="mb-2"><a href="#">About Us</a></li>
+                        <li class="mb-2"><a href="#">Academics</a></li>
+                        <li class="mb-2"><a href="#">Admissions</a></li>
+                        <li class="mb-2"><a href="#">Research</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-4 mb-4 mb-md-0">
+                    <h5>Contact Info</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i> 123 University Ave, Oceanview, CA 90210</li>
+                        <li class="mb-2"><i class="fas fa-phone-alt me-2"></i> (555) 123-4567</li>
+                        <li class="mb-2"><i class="fas fa-envelope me-2"></i> admissions@oceanview.edu</li>
+                        <li><i class="fas fa-clock me-2"></i> Mon-Fri: 8:00 AM - 5:00 PM</li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-4">
+                    <h5>Newsletter</h5>
+                    <p>Subscribe to our newsletter for the latest updates.</p>
+                    <form class="mt-3">
+                        <div class="input-group mb-3">
+                            <input type="email" class="form-control" placeholder="Your Email" required>
+                            <button class="btn btn-primary" type="submit">Subscribe</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <hr class="my-4 bg-light">
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                    <p class="mb-0">&copy; 2023 Oceanview University. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="#" class="me-3">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <a href="#" class="back-to-top" id="backToTop"><i class="fas fa-arrow-up"></i></a>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- AOS Animation JS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <!-- Custom JS -->
+     <script src="{% static 'portal/js/home.js' %}"></script>
+  
+</body>
+</html>

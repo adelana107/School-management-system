@@ -1,0 +1,168 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Bio-data | Oceanview University</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap & Custom CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'portal/css/biodata.css' %}">
+ 
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+</head>
+<body>
+
+    <!-- Navbar -->
+    {% include 'navbar.html' %}
+
+    <div class="container-fluid mt-4 animate__animated animate__fadeIn">
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-12">
+                <div class="content">
+                    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+                        <h2 class="header-title">
+                            <i class="fas fa-user-graduate"></i> Student Bio-data
+                        </h2>
+                        <div>
+                            <button class="btn btn-primary" onclick="printBioData()">
+                                <i class="fas fa-print me-2"></i> Print Bio-data
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Printable Bio-data Section -->
+                    <div id="printable-area">
+                        <div class="bio-data-card animate-fade-in">
+                            <div class="bio-data-header">
+                                <div class="d-flex justify-content-center align-items-center flex-column">
+                                    <img src="{% if student.profile_picture %}{{ student.profile_picture.url }}{% else %}{% static 'images/default-profile.png' %}{% endif %}" 
+                                         alt="Student Photo" 
+                                         class="university-logo mb-3"
+                                         onerror="this.src='{% static 'images/default-profile.png' %}'">
+                                    <h3>STUDENT BIO-DATA</h3>
+                                    <p class="mb-0 mt-2">Oceanview University</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bio-data-body">
+                                <table class="info-table">
+                                    {% if student %}
+                                    <tbody>
+                                        <tr>
+                                            <th>Full Name:</th>
+                                            <td>{{ student.surname }} {{ student.first_name }} {{ student.other_name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Application Number:</th>
+                                            <td>
+                                                {{ student.application_number }}
+                                                <span class="status-badge bg-success bg-opacity-10 text-success ms-2">
+                                                    <i class="fas fa-check-circle"></i> Verified
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Matric Number:</th>
+                                            <td>{{ student.matric_number }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Department:</th>
+                                            <td>
+                                                {{ student.department.name }}
+                                                <span class="status-badge bg-primary bg-opacity-10 text-primary ms-2">
+                                                    <i class="fas fa-graduation-cap"></i> {{ student.get_degree_display }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Contact Information:</th>
+                                            <td>
+                                                <div class="d-flex flex-column">
+                                                    <span><i class="fas fa-envelope me-2"></i> {{ student.email }}</span>
+                                                    <span class="mt-2"><i class="fas fa-phone me-2"></i> {{ student.phone_number }}</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Date of Birth:</th>
+                                            <td>
+                                                <i class="fas fa-birthday-cake me-2"></i>
+                                                {{ student.date_of_birth|date:"F d, Y" }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Academic Information:</th>
+                                            <td>
+                                                <div class="d-flex flex-column">
+                                                    <span><i class="fas fa-calendar-alt me-2"></i> {{ student.academic_session }}</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    {% else %}
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="2" class="text-center text-danger fw-bold py-4">
+                                                <i class="fas fa-exclamation-triangle me-2"></i> No student data available.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    {% endif %}
+                                </table>
+                                
+                                <!-- QR Code Section -->
+                                <div class="qr-code-container no-print">
+                                    <div class="text-center">
+                                        <div class="qr-code">
+                                            <!-- Placeholder for QR code - replace with actual QR generation -->
+                                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ student.matric_number }}" 
+                                                 alt="Student ID QR Code" 
+                                                 class="img-fluid">
+                                        </div>
+                                        <p class="text-muted mt-2">Scan this QR code to verify student identity</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="signature-area">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-4 mb-md-0">
+                                            <div class="signature-line"></div>
+                                            <p class="mt-3 mb-0 fw-bold">Student's Signature</p>
+                                            <p class="text-muted small">Date: {% now "F j, Y" %}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="signature-line"></div>
+                                            <p class="mt-3 mb-0 fw-bold">Registration Officer's Signature</p>
+                                            <p class="text-muted small">Date: ___________________</p>
+                                        </div>
+                                    </div>
+                                    <p class="text-center text-muted mt-4">
+                                        <small>
+                                            <i class="fas fa-lock me-1"></i> This is an official document of Oceanview University | Generated on {% now "F j, Y" %}
+                                        </small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End of Printable Bio-data Section -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'portal/js/biodata.js' %}"></script>
+</body>
+</html>

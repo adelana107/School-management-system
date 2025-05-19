@@ -1,0 +1,226 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Student | Academic Portal</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{% static 'crm/css/edit_student.css' %}">
+</head>
+<body>
+    {% include 'crm/sidebar.html' %}
+    <div class="main-container">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-user-edit"></i> Edit Student Application</h2>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Profile Section -->
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="profile-section">
+                                <div class="profile-img-container">
+                                    {% if form.instance.profile_picture %}
+                                        <img src="{{ form.instance.profile_picture.url }}" alt="Profile" class="profile-img" id="profilePicturePreview">
+                                    {% else %}
+                                        <img src="{% static 'images/default-profile.png' %}" alt="Profile" class="profile-img" id="profilePicturePreview">
+                                    {% endif %}
+                                    <label for="id_profile_picture" class="profile-edit-btn">
+                                        <i class="fas fa-camera"></i>
+                                    </label>
+                                    {{ form.profile_picture }}
+                                </div>
+                                <h5 class="mb-1">{{ form.instance.first_name }} {{ form.instance.surname }}</h5>
+                                <p class="text-muted small mb-2">ID: {{ form.instance.application_number }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-9">
+                            <!-- Personal Information -->
+                            <div class="section-divider">
+                                <span>Personal Information</span>
+                            </div>
+                            
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        {{ form.surname }}
+                                        <label for="{{ form.surname.id_for_label }}">Surname</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        {{ form.first_name }}
+                                        <label for="{{ form.first_name.id_for_label }}">First Name</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating">
+                                        {{ form.other_name }}
+                                        <label for="{{ form.other_name.id_for_label }}">Middle Name</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.email }}
+                                        <label for="{{ form.email.id_for_label }}">Email Address</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.phone_number }}
+                                        <label for="{{ form.phone_number.id_for_label }}">Phone Number</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.date_of_birth }}
+                                        <label for="{{ form.date_of_birth.id_for_label }}">Date of Birth</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.address }}
+                                        <label for="{{ form.address.id_for_label }}">Address</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Origin Information -->
+                            <div class="section-divider">
+                                <span>Origin Information</span>
+                            </div>
+                            
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.state_of_origin }}
+                                        <label for="{{ form.state_of_origin.id_for_label }}">State of Origin</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.local_government }}
+                                        <label for="{{ form.local_government.id_for_label }}">Local Government</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Academic Information -->
+                            <div class="section-divider">
+                                <span>Academic Information</span>
+                            </div>
+                            
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.school }}
+                                        <label for="{{ form.school.id_for_label }}">School</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        {{ form.department }}
+                                        <label for="{{ form.department.id_for_label }}">Department</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Form Actions -->
+                            <div class="d-flex justify-content-between pt-4 mt-4 border-top">
+                                <div>
+                                    <button type="submit" class="btn btn-primary me-2">
+                                        <i class="fas fa-save me-1"></i> Save Changes
+                                    </button>
+                                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-1"></i> Cancel
+                                    </a>
+                                </div>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                    <i class="fas fa-trash-alt me-1"></i> Delete Record
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteModalLabel"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this student record?</p>
+                    <p class="text-danger fw-bold"><i class="fas fa-exclamation-circle me-2"></i>This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form method="post" action="#">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt me-1"></i> Delete Permanently
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+   <script>
+    const getDepartmentsUrl = "{% url 'get_departments' %}";
+    const getLgasUrl = "{% url 'get_lgas' %}";
+    const initialSchoolId = "{{ form.instance.school.id|default_if_none:'' }}";
+    const initialDepartmentId = "{{ form.instance.department.id|default_if_none:'' }}";
+    const initialStateId = "{{ form.instance.state_of_origin.id|default_if_none:'' }}";
+    const initialLgaId = "{{ form.instance.local_government.id|default_if_none:'' }}";
+</script>
+<script src="{% static 'crm/js/edit_student.js' %}"></script>
+
+</body>
+</html>

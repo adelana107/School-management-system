@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Payment</title>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3498db;
+            --primary-dark: #2980b9;
+            --secondary: #2c3e50;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --gradient: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .payment-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 420px;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(52, 152, 219, 0.2);
+        }
+        
+        .payment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(52, 152, 219, 0.2);
+        }
+        
+        .payment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: var(--gradient);
+        }
+        
+        .payment-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+        }
+        
+        .payment-icon i {
+            color: white;
+            font-size: 36px;
+        }
+        
+        .payment-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 10px;
+        }
+        
+        .payment-amount {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .payment-details {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 30px;
+            text-align: left;
+            border: 1px solid rgba(52, 152, 219, 0.1);
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .detail-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .detail-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .detail-value {
+            color: var(--secondary);
+            font-weight: 500;
+        }
+        
+        .pay-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pay-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        .pay-btn:active {
+            transform: translateY(0);
+        }
+        
+        .pay-btn .icon {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+        
+        .pay-btn .ripple {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+        
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+        
+        .secure-note {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .secure-note i {
+            color: var(--primary);
+            margin-right: 5px;
+            font-size: 16px;
+        }
+        
+        .payment-methods {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .payment-method {
+            width: 40px;
+            height: 25px;
+            margin: 0 5px;
+            object-fit: contain;
+            filter: grayscale(30%);
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+        
+        .payment-method:hover {
+            filter: grayscale(0);
+            opacity: 1;
+        }
+
+        .watermark {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: rgba(52, 152, 219, 0.1);
+            font-size: 72px;
+            font-weight: 700;
+            z-index: 0;
+            pointer-events: none;
+            user-select: none;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="payment-card">
+        <div class="watermark">$</div>
+        <div class="payment-icon">
+            <i class="fas fa-lock"></i>
+        </div>
+        <h1 class="payment-title">Complete Your Payment</h1>
+        <div class="payment-amount">₦{{ amount }}</div>
+        
+        <div class="payment-details">
+            <div class="detail-row">
+                <span class="detail-label">Description:</span>
+                <span class="detail-value">Service Payment</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Email:</span>
+                <span class="detail-value">{{ email }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Reference:</span>
+                <span class="detail-value">{{ reference }}</span>
+            </div>
+        </div>
+        
+        <button type="button" class="pay-btn" onclick="payWithPaystack()" id="payButton">
+            <i class="fas fa-credit-card icon"></i>
+            Pay Securely
+        </button>
+        
+        <div class="secure-note">
+            <i class="fas fa-shield-alt"></i>
+            <span>Your payment is secured by Paystack</span>
+        </div>
+        
+        <div class="payment-methods">
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/visa/visa-original.svg" class="payment-method" alt="Visa">
+            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mastercard/mastercard-original.svg" class="payment-method" alt="Mastercard">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Verve.png" class="payment-method" alt="Verve">
+        </div>
+    </div>
+
+    <script>
+        function payWithPaystack(){
+            // Add ripple effect to button
+            const button = document.getElementById('payButton');
+            button.innerHTML = '<i class="fas fa-spinner fa-spin icon"></i> Processing...';
+            
+            var handler = PaystackPop.setup({
+                key: '{{ paystack_public_key }}',
+                email: '{{ email }}',
+                amount: '{{ amount }}',  // in kobo
+                ref: '{{ reference }}', // unique transaction reference
+                callback: function(response){
+                    // On successful payment, redirect to verification URL with ref
+                    window.location.href = '{{ callback_url }}?reference=' + response.reference;
+                },
+                onClose: function(){
+                    button.innerHTML = '<i class="fas fa-credit-card icon"></i> Pay Securely';
+                    alert('Payment window was closed');
+                }
+            });
+            handler.openIframe();
+        }
+        
+        // Add ripple effect to buttons
+        document.querySelectorAll('.pay-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple');
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+                
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        });
+    </script>
+</body>
+</html>

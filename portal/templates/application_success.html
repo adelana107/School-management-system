@@ -1,0 +1,101 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% trans "Application Submitted | Oceanview University" %}</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+        <link rel="stylesheet" href="{% static 'portal/css/application_success.css' %}">
+
+    
+</head>
+<body>
+    <div class="container success-container">
+        <div class="card success-card">
+            <div class="card-body text-center">
+                <img src="{% static 'images/university-logo.png' %}" 
+                     alt="{% trans 'Oceanview University Logo' %}" 
+                     class="university-logo animate__animated animate__fadeIn"
+                     onerror="this.src='https://via.placeholder.com/150x50?text=Oceanview'">
+                
+                <div class="success-icon animate__animated animate__bounceIn" aria-hidden="true">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                
+                <h1 class="animate__animated animate__fadeIn">{% trans "Application Submitted Successfully!" %}</h1>
+                
+                <p class="lead-text animate__animated animate__fadeIn">
+                    {% trans "Thank you for applying to Oceanview University. We've received your application and will process it shortly." %}
+                </p>
+
+                <div class="info-section animate__animated animate__fadeIn">
+                    <h2><i class="fas fa-file-alt"></i>{% trans "Your Application Details" %}</h2>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><strong>{% trans "Application Number" %}:</strong> <span class="text-primary">{{ application_number }}</span></li>
+                        <li class="mb-2"><strong>{% trans "Name" %}:</strong> {{ surname }} {{ first_name }}</li>
+                        <li><strong>{% trans "Date Submitted" %}:</strong> {% now "F d, Y" %}</li>
+                    </ul>
+                </div>
+
+                <div class="info-section animate__animated animate__fadeIn">
+                    <h2><i class="fas fa-sign-in-alt"></i>{% trans "Login Information" %}</h2>
+                    <p>{% trans "Use these credentials to track your application" %}:</p>
+                    <div class="credentials-box">
+                        <p class="mb-2"><strong>{% trans "Username" %}:</strong> <span class="highlight">{{ application_number }}</span></p>
+                        <p class="mb-0"><strong>{% trans "Temporary Password" %}:</strong> <span class="highlight">{{ surname|lower }}{% now "md" %}</span></p>
+                    </div>
+                    <div class="alert alert-warning small mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        {% trans "Please change your password after first login for security." %}
+                    </div>
+                </div>
+                
+                <div class="info-section animate__animated animate__fadeIn">
+                    <h2><i class="fas fa-list-check"></i>{% trans "Next Steps" %}</h2>
+                    <ol class="px-3">
+                        <li>{% trans "Check your email for application confirmation" %}</li>
+                        <li>{% trans "Login to track your application status" %}</li>
+                        <li>{% trans "Complete any additional requirements if requested" %}</li>
+                    </ol>
+                </div>
+                
+                <div class="d-grid gap-3 d-md-flex justify-content-center mt-4">
+                    <a href="{% url 'applicant_login' %}" class="btn btn-primary animate__animated animate__pulse animate__infinite">
+                        <i class="fas fa-user-circle me-2"></i> {% trans "Go to Application Profile" %}
+                    </a>
+                    <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-home me-2"></i> {% trans "Return to Homepage" %}
+                    </a>
+                </div>
+                
+                <div class="mt-4 small text-muted animate__animated animate__fadeIn">
+                    <p>
+                        {% trans "Need help?" %} 
+                        <a href="mailto:admissions@oceanview.edu" class="contact-link">
+                            <i class="fas fa-envelope me-1"></i> {% trans "Contact Admissions" %}
+                        </a>
+                        {% trans "or call" %} <a href="tel:+1234567890" class="contact-link">+1 (234) 567-890</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'portal/js/application_success.js' %}"></script>
+   
+</body>
+</html>

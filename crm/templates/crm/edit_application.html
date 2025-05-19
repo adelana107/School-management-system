@@ -1,0 +1,206 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit {{ applicant.surname }} {{ applicant.first_name }} - Applicant Profile</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{% static 'crm/css/edit_application.css' %}">
+
+
+</head>
+<body>
+
+    <!-- Sidebar -->
+    {% include 'crm/sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-primary mb-0"><i class="fas fa-user-edit me-2"></i>Edit Applicant Profile</h2>
+            <a href="{% url 'view_applicant' applicant.id %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Profile
+            </a>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <i class="fas fa-edit me-2"></i>Edit Applicant Information
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Error!</strong> Please correct the following errors:
+                            <ul>
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <div class="row mb-4">
+                        <!-- Profile Image -->
+                        <div class="col-md-3 text-center">
+                            {% if applicant.profile_picture %}
+                                <img src="{{ applicant.profile_picture.url }}" class="profile-picture mb-3" id="profile-preview">
+                            {% else %}
+                                <img src="{% static 'images/default-profile.png' %}" class="profile-picture mb-3" id="profile-preview">
+                            {% endif %}
+                            <label for="id_profile_picture" class="form-label">Change Profile Picture</label>
+                            <input type="file" class="form-control" name="profile_picture" id="id_profile_picture" accept="image/*">
+                            <small class="text-muted">Max 2MB (JPG, PNG)</small>
+                        </div>
+
+                        <!-- Personal Info -->
+                        <div class="col-md-9">
+                            <h5 class="text-primary mb-3">Personal Information</h5>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="id_surname" class="form-label">Surname</label>
+                                    <input type="text" class="form-control {% if form.surname.errors %}is-invalid{% endif %}" 
+                                           name="surname" id="id_surname" value="{{ form.surname.value|default:'' }}">
+                                    {% if form.surname.errors %}
+                                        <div class="invalid-feedback">{{ form.surname.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="id_first_name" class="form-label">First Name</label>
+                                    <input type="text" class="form-control {% if form.first_name.errors %}is-invalid{% endif %}" 
+                                           name="first_name" id="id_first_name" value="{{ form.first_name.value|default:'' }}">
+                                    {% if form.first_name.errors %}
+                                        <div class="invalid-feedback">{{ form.first_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="id_other_name" class="form-label">Middle Name</label>
+                                    <input type="text" class="form-control" name="other_name" id="id_other_name" value="{{ form.other_name.value|default:'' }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_email" class="form-label">Email</label>
+                                    <input type="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
+                                           name="email" id="id_email" value="{{ form.email.value|default:'' }}">
+                                    {% if form.email.errors %}
+                                        <div class="invalid-feedback">{{ form.email.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_phone_number" class="form-label">Phone Number</label>
+                                    <input type="text" class="form-control {% if form.phone_number.errors %}is-invalid{% endif %}" 
+                                           name="phone_number" id="id_phone_number" value="{{ form.phone_number.value|default:'' }}">
+                                    {% if form.phone_number.errors %}
+                                        <div class="invalid-feedback">{{ form.phone_number.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_date_of_birth" class="form-label">Date of Birth</label>
+                                    <input type="date" class="form-control {% if form.date_of_birth.errors %}is-invalid{% endif %}" 
+                                           name="date_of_birth" id="id_date_of_birth" value="{{ form.date_of_birth.value|date:'Y-m-d'|default:'' }}">
+                                    {% if form.date_of_birth.errors %}
+                                        <div class="invalid-feedback">{{ form.date_of_birth.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_address" class="form-label">Address</label>
+                                    <textarea class="form-control" name="address" id="id_address">{{ form.address.value|default:'' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h5 class="mb-3 text-primary">Origin Information</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="id_state_of_origin" class="form-label">State of Origin</label>
+                            <select id="id_state_of_origin" name="state_of_origin" class="form-select select2 {% if form.state_of_origin.errors %}is-invalid{% endif %}">
+                                <option value="">---------</option>
+                                {% for state in states %}
+                                    <option value="{{ state.id }}" {% if form.state_of_origin.value|stringformat:"i" == state.id|stringformat:"i" %}selected{% endif %}>{{ state.name }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.state_of_origin.errors %}
+                                <div class="invalid-feedback">{{ form.state_of_origin.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_local_government" class="form-label">Local Government</label>
+                            <select id="id_local_government" name="local_government" class="form-select select2 {% if form.local_government.errors %}is-invalid{% endif %}">
+                                <option value="">---------</option>
+                                <!-- LGAs will be loaded dynamically -->
+                            </select>
+                            {% if form.local_government.errors %}
+                                <div class="invalid-feedback">{{ form.local_government.errors.0 }}</div>
+                            {% endif %}
+                            <!-- Store current LGA value for later use -->
+                            <input type="hidden" id="current_lga" value="{{ form.local_government.value|default:'' }}">
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h5 class="mb-3 text-primary">Academic Information</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="id_school" class="form-label">School</label>
+                            <select id="id_school" name="school" class="form-select select2 {% if form.school.errors %}is-invalid{% endif %}">
+                                <option value="">---------</option>
+                                {% for school in schools %}
+                                    <option value="{{ school.id }}" {% if form.school.value|stringformat:"i" == school.id|stringformat:"i" %}selected{% endif %}>{{ school.name }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.school.errors %}
+                                <div class="invalid-feedback">{{ form.school.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_department" class="form-label">Department</label>
+                            <select id="id_department" name="department" class="form-select select2 {% if form.department.errors %}is-invalid{% endif %}">
+                                <option value="">---------</option>
+                                <!-- Departments will be loaded dynamically -->
+                            </select>
+                            {% if form.department.errors %}
+                                <div class="invalid-feedback">{{ form.department.errors.0 }}</div>
+                            {% endif %}
+                            <!-- Store current department value for later use -->
+                            <input type="hidden" id="current_dept" value="{{ form.department.value|default:'' }}">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-5">
+                        <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save me-2"></i>Save Changes</button>
+                        <a href="{% url 'view_applicant' applicant.id %}" class="btn btn-outline-secondary"><i class="fas fa-times me-2"></i>Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer text-center">
+        © 2025 University Portal | v2.1.0 | <a href="#" class="text-decoration-none">Privacy Policy</a>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script src="{% static 'crm/js/edit_application.js' %}"></script>
+
+  
+</body>
+</html>

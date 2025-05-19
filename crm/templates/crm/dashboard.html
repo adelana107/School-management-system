@@ -1,0 +1,388 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="University CRM Dashboard for application management">
+    <title>Dashboard - University CRM System</title>
+    
+    <!-- Preload critical assets -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="font" crossorigin>
+    
+    <!-- CSS imports -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'crm/css/dashboard.css' %}">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{% static 'img/favicon.ico' %}" type="image/x-icon">
+    
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+    <!-- Sidebar -->
+    {% include 'crm/sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Page Header -->
+        <header class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h2 mb-0">
+                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard Overview
+                </h1>
+                <nav aria-label="breadcrumb" class="d-none d-md-block">
+                    <ol class="breadcrumb bg-transparent p-0">
+                        <li class="breadcrumb-item"><a href="#">Home</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="d-flex">
+                <div class="input-group search-box me-2">
+                    <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" placeholder="Search applications..." aria-label="Search applications">
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dashboardFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-filter me-1"></i> Filters
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dashboardFilterDropdown">
+                        <li><h6 class="dropdown-header">Filter By</h6></li>
+                        <li><a class="dropdown-item" href="#">This Month</a></li>
+                        <li><a class="dropdown-item" href="#">Last Quarter</a></li>
+                        <li><a class="dropdown-item" href="#">This Year</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#">Reset Filters</a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <!-- Key Metrics Section -->
+        <section aria-labelledby="keyMetricsHeading">
+            <h2 id="keyMetricsHeading" class="visually-hidden">Key Metrics</h2>
+            
+            <div class="row g-4">
+                <!-- Total Applications -->
+                <div class="col-xl-3 col-md-6">
+                    <a href="{% url 'applicant_list' %}" class="text-decoration-none"> <!-- Replace 'your_view_name' with the actual view name -->
+                        <div class="card stats-card text-white bg-gradient-primary">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h3 class="h5 card-title">Total Applications</h3>
+                                        <h2 class="mb-0">{{ total_applications }}</h2>
+                                        <small class="opacity-75">+12% from last month</small>
+                                    </div>
+                                    <i class="fas fa-file-alt fa-3x opacity-50"></i>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="progress" style="height: 4px;">
+                                        <div class="progress-bar bg-white" style="width: 72%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                
+
+                <!-- Schools -->
+                <div class="col-xl-3 col-md-6">
+                    <a href="{% url 'school_list' %}" class="text-decoration-none"> <!-- Replace 'school_list' with the actual view name -->
+                        <div class="card stats-card text-white bg-gradient-success">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h3 class="h5 card-title">Schools</h3>
+                                        <h2 class="mb-0">{{ total_schools }}</h2>
+                                        <small class="opacity-75">5 new this quarter</small>
+                                    </div>
+                                    <i class="fas fa-school fa-3x opacity-50"></i>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="progress" style="height: 4px;">
+                                        <div class="progress-bar bg-white" style="width: 65%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                
+
+                <!-- Departments -->
+                <div class="col-xl-3 col-md-6">
+                    <a href="{% url 'department_list' %}" class="text-decoration-none"> <!-- Replace 'department_list' with the actual view name -->
+                        <div class="card stats-card text-white bg-gradient-warning">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h3 class="h5 card-title">Departments</h3>
+                                        <h2 class="mb-0">{{ total_departments }}</h2>
+                                        <small class="opacity-75">Across all schools</small>
+                                    </div>
+                                    <i class="fas fa-book fa-3x opacity-50"></i>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="progress" style="height: 4px;">
+                                        <div class="progress-bar bg-white" style="width: 58%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                
+
+                <!-- Pending Applications -->
+                <div class="col-xl-3 col-md-6">
+                    <a href="{% url 'applicant_list'   %}" class="text-decoration-none"> <!-- Change the href to your desired URL -->
+                        <div class="card stats-card text-white bg-gradient-danger">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h3 class="h5 card-title">Pending Applications</h3>
+                                        <h2 class="mb-0">{{ pending_applications }}</h2>
+                                        <small class="opacity-75">Require attention</small>
+                                    </div>
+                                    <i class="fas fa-hourglass-half fa-3x opacity-50"></i>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="progress" style="height: 4px;">
+                                        <div class="progress-bar bg-white" style="width: 85%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Visualization Section -->
+        <section aria-labelledby="dataVisualizationHeading" class="mt-4">
+            <h2 id="dataVisualizationHeading" class="visually-hidden">Data Visualization</h2>
+            
+            <div class="row g-4">
+                <div class="col-xl-8">
+                    <!-- Applications Trend Chart -->
+                    <div class="chart-container">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="h5 mb-0" style="color: #000;">
+                               <i class="fas fa-chart-line me-2"></i>Applications Trend
+                            </h3>
+                            <div class="dropdown chart-actions">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="chartRangeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Last 12 Months
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="chartRangeDropdown">
+                                    <li><a class="dropdown-item" href="#" data-range="6">Last 6 Months</a></li>
+                                    <li><a class="dropdown-item active" href="#" data-range="12">Last 12 Months</a></li>
+                                    <li><a class="dropdown-item" href="#" data-range="24">Last 2 Years</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <canvas id="applicationsChart" height="300" aria-label="Applications trend chart" role="img"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Admitted Students Summary -->
+                <div class="col-xl-4">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3 class="h5 mb-0">
+                                <i class="fas fa-user-graduate me-2"></i>Admitted Students
+                            </h3>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-link text-white dropdown-toggle" type="button" id="admissionDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="admissionDropdown">
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-download me-2"></i>Export Data</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-filter me-2"></i>Filter</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-sync-alt me-2"></i>Refresh</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <div class="text-center my-4">
+                                <div class="position-relative d-inline-block">
+                                    <svg width="120" height="120" viewBox="0 0 120 120" class="d-block mx-auto">
+                                        <circle cx="60" cy="60" r="54" fill="none" stroke="#e9ecef" stroke-width="8"></circle>
+                                        <circle cx="60" cy="60" r="54" fill="none" stroke="#4cc9f0" stroke-width="8" stroke-dasharray="339.292" stroke-dashoffset="118.752" stroke-linecap="round"></circle>
+                                    </svg>
+                                    <div class="position-absolute top-50 start-50 translate-middle">
+                                        <h2 class="mb-0">{{ admitted_students }}</h2>
+                                        <small class="text-muted">Admitted</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between small mb-2">
+                                    <span>Admission Rate</span>
+                                    <span>65%</span>
+                                </div>
+                                <div class="progress mb-3">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 65%"></div>
+                                </div>
+                                <div class="d-flex justify-content-between small text-muted">
+                                    <span>Target: 70%</span>
+                                    <span>+8% from last year</span>
+                                </div>
+                                <hr>
+                                <div class="d-grid">
+                                    <a href="{% url 'student_list'    %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-list me-1"></i> View All Admitted
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recent Applications Section -->
+        <section aria-labelledby="recentApplicationsHeading" class="mt-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="h5 mb-0">
+                        <i class="fas fa-file-alt me-2"></i>Recent Applications
+                    </h3>
+                    <div>
+                        <a href="{% url 'student_list' %}" class="btn btn-sm btn-light me-2">
+                            View All <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                        <div class="dropdown d-inline-block">
+                            <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="applicationsActions" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="applicationsActions">
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-download me-2"></i>Export</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-filter me-2"></i>Filter</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" aria-describedby="recentApplicationsHeading">
+                            <caption class="visually-hidden">List of recent applications with status and actions</caption>
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Application No</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Course</th>
+                                    <th scope="col">School</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for application in recent_applications %}
+                                <tr>
+                                    <td>{{ application.application_number }}</td>
+                                    <td>
+                                        <strong>{{ application.surname }} {{ application.first_name }}</strong>
+                                    </td>
+                                    <td class="text-ellipsis" style="max-width: 150px;" title="{{ application.department.name }}">
+                                        {{ application.department.name }}
+                                    </td>
+                                    <td class="text-ellipsis" style="max-width: 120px;" title="{{ application.school.name }}">
+                                        {{ application.school.name }}
+                                    </td>
+                                    <td>
+                                        {% if application.is_approved %}
+                                            <span class="badge badge-approved rounded-pill">
+                                                <i class="fas fa-check-circle me-1"></i> Approved
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-pending rounded-pill">
+                                                <i class="fas fa-clock me-1"></i> Pending
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ application.submission_date|date:"Y-m-d" }}</td>
+                                    <td>
+                                        <div class="d-flex">
+                                            <a href="{% url 'view_applicant' application.id %}" class="btn btn-sm btn-primary me-2" aria-label="View {{ application.surname }}'s application">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="applicationActions{{ application.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="applicationActions{{ application.id }}">
+                                                    <li><a class="dropdown-item" href="#"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>Generate PDF</a></li>
+                                                    <li><a class="dropdown-item" href="#"><i class="fas fa-envelope me-2"></i>Send Email</a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash-alt me-2"></i>Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="d-flex flex-column align-items-center">
+                                            <i class="fas fa-inbox fa-3x text-muted mb-2"></i>
+                                            <p class="mb-0">No recent applications found</p>
+                                            <a href="#" class="btn btn-sm btn-primary mt-2">
+                                                <i class="fas fa-plus me-1"></i> Add New Application
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% if recent_applications %}
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            Showing <strong>1-{{ recent_applications|length }}</strong> of <strong>{{ total_applications }}</strong> applications
+                        </div>
+                        <div>
+                            <nav aria-label="Applications pagination">
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                                    </li>
+                                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="#">Next</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+
+    <!-- Dashboard Script -->
+<script src="{% static 'crm/js/dashboard.js' %}"></script>

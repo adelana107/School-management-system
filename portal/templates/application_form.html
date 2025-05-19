@@ -1,0 +1,158 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply Now - Oceanview University</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <link rel="stylesheet" href="{% static 'portal/css/application_form.css' %}">
+
+
+
+</head>
+<body>
+    <div class="application-container">
+        <div class="form-header">
+            <h1>Oceanview University Application</h1>
+            <p>Complete your application in a few simple steps</p>
+        </div>
+
+        <div class="progress-steps">
+            <div class="step active">
+                <div class="step-number">1</div>
+                <div class="step-label">Personal Info</div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-label">Academic Info</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-label">Review & Submit</div>
+            </div>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="form-content">
+            {% csrf_token %}
+            
+            <!-- Personal Information Section -->
+            <div class="form-section">
+                <h2 class="section-title"><i class="fas fa-user-graduate"></i> Personal Information</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="id_surname">Surname *</label>
+                        {{ form.surname }}
+                        {{ form.surname.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_first_name">First Name *</label>
+                        {{ form.first_name }}
+                        {{ form.first_name.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_other_name">Other Name</label>
+                        {{ form.other_name }}
+                        {{ form.other_name.errors }}
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="id_email">Email Address *</label>
+                        {{ form.email }}
+                        {{ form.email.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_phone_number">Phone Number *</label>
+                        {{ form.phone_number }}
+                        {{ form.phone_number.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_date_of_birth">Date of Birth *</label>
+                        {{ form.date_of_birth }}
+                        {{ form.date_of_birth.errors }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information Section -->
+            <div class="form-section">
+                <h2 class="section-title"><i class="fas fa-map-marker-alt"></i> Contact Information</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="id_address">Residential Address *</label>
+                        {{ form.address }}
+                        {{ form.address.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_state_of_origin">State of Origin *</label>
+                        {{ form.state_of_origin }}
+                        {{ form.state_of_origin.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_local_government">Local Government *</label>
+                        {{ form.local_government }}
+                        {{ form.local_government.errors }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Academic Information Section -->
+            <div class="form-section">
+                <h2 class="section-title"><i class="fas fa-book-open"></i> Academic Information</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="id_school">School *</label>
+                        {{ form.school }}
+                        {{ form.school.errors }}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_department">Department *</label>
+                        {{ form.department }}
+                        {{ form.department.errors }}
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="id_academic_session">Academic Session *</label>
+                        {{ form.academic_session }}
+                        {{ form.academic_session.errors }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Picture Section -->
+            <div class="form-section">
+                <h2 class="section-title"><i class="fas fa-id-card"></i> Profile Picture</h2>
+                <div class="form-group">
+                    <div class="file-upload">
+                        <div class="file-upload-btn">
+                            <i class="fas fa-cloud-upload-alt fa-3x" style="color: var(--sky-blue); margin-bottom: 1rem;"></i>
+                            <p style="font-weight: 500; color: var(--navy-blue);">Drag & drop your photo or click to browse</p>
+                            <p class="file-upload-text">JPG or PNG (Max 2MB | 300x300px recommended)</p>
+                            {{ form.profile_picture }}
+                        </div>
+                        <img id="image-preview" class="file-upload-preview" src="#" alt="Preview" />
+                    </div>
+                    {{ form.profile_picture.errors }}
+                </div>
+            </div>
+
+            <div class="form-group form-check">
+                <input type="checkbox" class="form-check-input" id="termsCheck" required>
+                <label class="form-check-label" for="termsCheck">I certify that all information provided is accurate and complete *</label>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-paper-plane mr-2"></i> Submit Application
+            </button>
+        </form>
+    </div>
+
+    <!-- Your original JavaScript remains unchanged -->
+         <script src="{% static 'portal/js/application_form.js' %}"></script>
+ 
+</body>
+</html>
