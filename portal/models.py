@@ -120,7 +120,7 @@ class Application(models.Model):
         if not self.application_number:
             count = Application.objects.count() + 1
             self.application_number = f"A2025{count:03d}"
-            count = Student.objects.count() + 1
+            count = Application.objects.count() + 1
         super().save(*args, **kwargs)
     def __str__(self):
         return f"{self.application_number} - {self.surname} {self.first_name}"    
@@ -147,14 +147,6 @@ class Application(models.Model):
             
         )
 
-        # Create User for Student
-    def save(self, *args, **kwargs):
-        if not self.application_number:
-            count = Application.objects.count() + 1
-            self.application_number = f"A2025{count:03d}"
-        super().save(*args, **kwargs)
-
-        
 
 # ------------------ STUDENT MODEL ------------------
 class Student(models.Model):
@@ -170,12 +162,23 @@ class Student(models.Model):
     school = models.ForeignKey(School, on_delete=models.CASCADE)
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
     application_number = models.CharField(max_length=10, unique=True, blank=True)
-    matric_number = models.CharField(max_length=10, unique=True, blank=True, null=True)
     profile_picture = models.ImageField(upload_to="profile_pics/", blank=True, null=True, default="profile_pics/default-profile.png")
     academic_session = models.ForeignKey(AcademicSession, on_delete=models.CASCADE, related_name="students")
     created_at = models.DateTimeField(default=now, editable=True)
     year = models.ForeignKey(Year, on_delete=models.CASCADE)
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE)
+    has_paid_school_fees = models.BooleanField(default=False)
+    matric_number = models.CharField(max_length=20, unique=True, blank=True, null=True)
+
+    def generate_matric_number(self):
+        if self.has_paid_school_fees and not self.matric_number:
+            count = Student.objects.exclude(matric_number__isnull=True).count() + 1
+            self.matric_number = f"MATZ{count:04d}"
+
+    def save(self, *args, **kwargs):
+        self.generate_matric_number()  # This only sets matric_number, no save inside
+        super().save(*args, **kwargs)
+
     
 
     def __str__(self):

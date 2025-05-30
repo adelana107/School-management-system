@@ -23,6 +23,77 @@ import base64
 # Create your views here.
 
 
+@login_required
+def pay_school_fees(request):
+    student = get_object_or_404(Student, application_number=request.user.username)
+
+    if student.has_paid_school_fees:
+        messages.info(request, "You have already paid your school fees.")
+        return redirect('portal')
+
+    # Generate payment reference
+    payment_reference = str(uuid.uuid4())
+    request.session['school_fees_payment_reference'] = payment_reference
+    request.session['school_fees_amount'] = 100000  # Store amount in kobo in session for verification
+
+    # Amount details (1000 Naira = 100000 kobo)
+    amount_in_naira = 1000.00
+    amount_in_kobo = 100000
+
+    context = {
+        'paystack_public_key': settings.PAYSTACK_PUBLIC_KEY,
+        'email': student.email,
+        'amount': amount_in_kobo,  # Pass amount in kobo to template
+        'amount_display': amount_in_naira,  # For display purposes
+        'reference': payment_reference,
+        'callback_url': request.build_absolute_uri(reverse('school_fees_verify_payment')),
+    }
+
+    return render(request, 'paystack_school_fees.html', context)
+
+@login_required
+def school_fees_verify_payment(request):
+    reference = request.GET.get('reference')
+    session_ref = request.session.get('school_fees_payment_reference')
+    expected_amount = request.session.get('school_fees_amount')  # Get amount in kobo from session
+
+    if reference != session_ref:
+        messages.error(request, "Invalid payment reference.")
+        return redirect('portal')
+
+    url = f'https://api.paystack.co/transaction/verify/{reference}'
+    headers = {
+        'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
+    }
+    response = requests.get(url, headers=headers)
+    res_data = response.json()
+
+    if res_data['status'] and res_data['data']['status'] == 'success':
+        # Verify the amount matches what we expected
+        paid_amount = res_data['data']['amount']
+        
+        if paid_amount != expected_amount:
+            messages.error(request, f"Payment amount mismatch. Expected {expected_amount/100}, got {paid_amount/100}")
+            return redirect('portal')
+
+        student = get_object_or_404(Student, application_number=request.user.username)
+
+        # Mark student as having paid school fees
+        student.has_paid_school_fees = True
+        student.save()
+
+        # Clear session variables
+        del request.session['school_fees_payment_reference']
+        del request.session['school_fees_amount']
+
+        messages.success(request, "School fees payment successful! Matric number will be generated.")
+        return redirect('portal')
+
+    messages.error(request, "Payment verification failed.")
+    return redirect('portal')
+
+
+
 def payment_verify(request):
     reference = request.GET.get('reference')
     session_ref = request.session.get('payment_reference')

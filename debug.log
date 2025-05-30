@@ -1,0 +1,82 @@
+Watching for file changes with StatReloader
+Not Found: /api/online-status/
+"GET /api/online-status/ HTTP/1.1" 404 20412
+"GET /student-portal/ HTTP/1.1" 200 19177
+"GET /media/profile_pics/Adelana_4JBXGha.jpg HTTP/1.1" 304 0
+Not Found: /api/online-status/
+"GET /api/online-status/ HTTP/1.1" 404 20412
+Internal Server Error: /payment/initiate/9/
+Traceback (most recent call last):
+  File "C:\Users\Adela\Desktop\School-management-system\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Adela\Desktop\School-management-system\venv\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\Adela\Desktop\School-management-system\portal\views.py", line 267, in initialize_payment
+    "value": student.get_full_name()
+AttributeError: 'Student' object has no attribute 'get_full_name'
+"GET /payment/initiate/9/ HTTP/1.1" 500 70194
+C:\Users\Adela\Desktop\School-management-system\portal\models.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+Internal Server Error: /payment/initiate/9/
+Traceback (most recent call last):
+  File "C:\Users\Adela\Desktop\School-management-system\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Adela\Desktop\School-management-system\venv\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\Adela\Desktop\School-management-system\portal\views.py", line 267, in initialize_payment
+    "value": student.get_full_name()
+  File "C:\Users\Adela\Desktop\School-management-system\portal\models.py", line 186, in get_full_name
+    return f"{self.first_name} {self.last_name}"
+AttributeError: 'Student' object has no attribute 'last_name'
+"GET /payment/initiate/9/ HTTP/1.1" 500 73964
+C:\Users\Adela\Desktop\School-management-system\portal\models.py changed, reloading.
+Watching for file changes with StatReloader
+Internal Server Error: /payment/initiate/9/
+Traceback (most recent call last):
+  File "C:\Users\Adela\Desktop\School-management-system\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Adela\Desktop\School-management-system\venv\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\Adela\Desktop\School-management-system\portal\views.py", line 267, in initialize_payment
+    "value": student.get_full_name()
+  File "C:\Users\Adela\Desktop\School-management-system\portal\models.py", line 186, in get_full_name
+    return f"{self.first_name} {self.surname_name}"
+AttributeError: 'Student' object has no attribute 'surname_name'
+"GET /payment/initiate/9/ HTTP/1.1" 500 73982
+C:\Users\Adela\Desktop\School-management-system\portal\models.py changed, reloading.
+Watching for file changes with StatReloader
+"GET /payment/initiate/9/ HTTP/1.1" 302 0
+C:\Users\Adela\Desktop\School-management-system\portal\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Adela\Desktop\School-management-system\portal\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Adela\Desktop\School-management-system\portal\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Adela\Desktop\School-management-system\portal\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Adela\Desktop\School-management-system\oceanview\settings.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Adela\Desktop\School-management-system\oceanview\settings.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Adela\Desktop\School-management-system\portal\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Adela\Desktop\School-management-system\portal\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Adela\Desktop\School-management-system\portal\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Adela\Desktop\School-management-system\portal\views.py changed, reloading.
+Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+Not Found: /api/online-status/
+"GET /api/online-status/ HTTP/1.1" 404 20412
+"GET /student-portal/ HTTP/1.1" 200 19177
+"GET /media/profile_pics/Adelana_4JBXGha.jpg HTTP/1.1" 304 0
+Not Found: /api/online-status/
+"GET /api/online-status/ HTTP/1.1" 404 20412
+"GET /payment/initiate/9/ HTTP/1.1" 302 0
+C:\Users\Adela\Desktop\School-management-system\portal\views.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Adela\Desktop\School-management-system\portal\urls.py changed, reloading.
+Watching for file changes with StatReloader
+C:\Users\Adela\Desktop\School-management-system\oceanview\settings.py changed, reloading.
