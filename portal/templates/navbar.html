@@ -136,14 +136,24 @@
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{% url 'pay_school_fees' %}">
-                                    <i class="fas fa-credit-card me-2"></i> Make Payment
+                                    <i class="fas fa-credit-card me-2"></i> Pay School Fees
                                 </a>
                             </li>
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-calendar-alt me-2"></i> View Timetable
-                                </a>
-                            </li>
+                            {% if timetables %}
+    {% for timetable in timetables %}
+        <li>
+            <a class="dropdown-item" href="{{ timetable.file.url }}">
+                <i class="fas fa-calendar-alt me-2"></i> View Timetable
+            </a>
+        </li>
+    {% endfor %}
+{% else %}
+    <li class="dropdown-item text-muted">
+        <i class="fas fa-info-circle me-2"></i> No timetable available
+    </li>
+{% endif %}
+
+
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item" href="#">
@@ -157,7 +167,7 @@
                     <li class="nav-item position-relative">
                         <a class="nav-link" href="{% url 'notifications' %}">
                             <i class="fas fa-bell"></i> Notifications
-                            <span class="badge bg-danger badge-notification">3</span>
+                            <span class="badge bg-danger badge-notification">{{notifications.count}}</span>
                         </a>
                     </li>
                     

@@ -4,127 +4,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Portal</title>
+    <meta name="description" content="Student Portal Dashboard">
+    <title>Student Portal - Dashboard</title>
 
     <!-- Bootstrap & Custom CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <!-- FontAwesome for Icons -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'portal/css/portal.css' %}">
-    
-
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
 
     <!-- Navbar -->
     {% include 'navbar.html' %}
 
     <!-- Main Content -->
-    <div class="container-fluid dashboard-container">
+    <main class="container-fluid dashboard-container flex-grow-1 py-4">
         {% if student %}
             <!-- Welcome Section with Profile -->
-            <div class="row mb-4 align-items-center">
-                <div class="col-md-8">
-                    <h1 class="fw-bold mb-2" style="font-size: 2rem; color: var(--dark);">Welcome back, {{ student.surname }}!</h1>
-                    <p class="lead text-muted mb-0">
-                        {% now "F j, Y" %} • 
-                        <span class="badge bg-primary">{{ student.matric_number}}</span>
-                        {% if student.department %}
-                        <span class="badge bg-info ms-2">{{ student.department }}</span>
-                        {% endif %}
-                    </p>
-                </div>
-                <div class="col-md-4 text-md-end">
-                    <div class="d-inline-block position-relative">
-                        <img src="{% if student.profile_picture %}{{ student.profile_picture.url }}{% else %}{% static 'images/default-profile.png' %}{% endif %}" 
-                             class="rounded-circle avatar-img" 
-                             alt="{{ student.surname }}'s profile picture">
-                        <span class="bg-success online-status"></span>
+            <section aria-labelledby="welcome-heading">
+                <div class="row mb-4 align-items-center">
+                    <div class="col-md-8">
+                        <h1 id="welcome-heading" class="fw-bold mb-2" style="font-size: 2rem; color: var(--dark);">
+                            Welcome back, <span class="text-primary">{{ student.surname }}</span>!
+                        </h1>
+                        <p class="lead text-muted mb-0">
+                            <time datetime="{% now 'Y-m-d' %}">{% now "F j, Y" %}</time> • 
+                            <span class="badge bg-primary">{{ student.matric_number}}</span>
+                            {% if student.department %}
+                            <span class="badge bg-info ms-2">{{ student.department }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <figure class="d-inline-block position-relative mb-0">
+                            <img src="{% if student.profile_picture %}{{ student.profile_picture.url }}{% else %}{% static 'images/default-profile.png' %}{% endif %}" 
+                                 class="rounded-circle avatar-img" 
+                                 alt="{{ student.surname }}'s profile picture"
+                                 width="80" height="80">
+                            <span class="bg-success online-status" aria-hidden="true"></span>
+                        </figure>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Stats Cards -->
-            <div class="row g-4 mb-4">
-                <div class="col-xl-3 col-md-6">
-                    <div class="card h-100">
-                        <div class="card-body stat-card">
-                            <div class="icon-lg bg-primary bg-opacity-10 text-primary">
-                                <i class="fas fa-book-open"></i>
-                            </div>
-                            <h5 class="card-title text-muted mb-2">Total Courses</h5>
-                            <p class="value">{{ total_course }}</p>
-                            <small class="text-success">
-                                <i class="fas fa-arrow-up me-1"></i> 2 from last term
-                            </small>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-xl-3 col-md-6">
-                    <div class="card h-100">
-                        <div class="card-body stat-card">
-                            <div class="icon-lg bg-info bg-opacity-10 text-info">
-                                <i class="fas fa-calculator"></i>
-                            </div>
-                            <h5 class="card-title text-muted mb-2">Total Units</h5>
-                            <p class="value">{{ total_unit }}</p>
-                            <small class="text-muted">Max allowed: 24</small>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-xl-3 col-md-6">
-                    <div class="card h-100">
-                        <div class="card-body stat-card">
-                            <div class="icon-lg bg-warning bg-opacity-10 text-warning">
-                                <i class="fas fa-graduation-cap"></i>
-                            </div>
-                            <h5 class="card-title text-muted mb-2">Last Semester GPA</h5>
-                            {% if last_semester %}
-                                <p class="value">{{ last_gpa|default:"N/A" }}</p>
-                                <small class="{% if last_gpa >= 3.5 %}text-success{% elif last_gpa %}text-danger{% else %}text-muted{% endif %}">
-                                    {% if last_gpa %}
-                                        {% if last_gpa >= 3.5 %}
-                                            Excellent
-                                        {% elif last_gpa >= 2.0 %}
-                                            Average
-                                        {% else %}
-                                            Below Average
-                                        {% endif %}
-                                    {% else %}
-                                        Not available
-                                    {% endif %}
+            <section aria-labelledby="stats-heading" class="mb-4">
+                <h2 id="stats-heading" class="visually-hidden">Academic Statistics</h2>
+                <div class="row g-4">
+                    <div class="col-xl-3 col-md-6">
+                        <article class="card h-100">
+                            <div class="card-body stat-card">
+                                <div class="icon-lg bg-primary bg-opacity-10 text-primary" aria-hidden="true">
+                                    <i class="fas fa-book-open"></i>
+                                </div>
+                                <h3 class="card-title text-muted mb-2 h6">Total Courses</h3>
+                                <p class="value" aria-label="Total courses">{{ total_course }}</p>
+                                <small class="text-success">
+                                    <i class="fas fa-arrow-up me-1" aria-hidden="true"></i> 
+                                    <span>2 from last term</span>
                                 </small>
-                            {% else %}
-                                <p class="value text-muted">N/A</p>
-                                <small class="text-muted">No data</small>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6">
-                    <div class="card h-100">
-                        <div class="card-body stat-card">
-                            <div class="icon-lg bg-success bg-opacity-10 text-success">
-                                <i class="fas fa-calendar-alt"></i>
                             </div>
-                            <h5 class="card-title text-muted mb-2">Academic Year</h5>
-                            <p class="value">{{ student.year }}</p>
-                            <small class="text-primary">{{ student.semester }}</small>
-                        </div>
+                        </article>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6">
+                        <article class="card h-100">
+                            <div class="card-body stat-card">
+                                <div class="icon-lg bg-info bg-opacity-10 text-info" aria-hidden="true">
+                                    <i class="fas fa-calculator"></i>
+                                </div>
+                                <h3 class="card-title text-muted mb-2 h6">Total Units</h3>
+                                <p class="value" aria-label="Total units">{{ total_unit }}</p>
+                                <small class="text-muted">Max allowed: 24</small>
+                            </div>
+                        </article>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6">
+                        <article class="card h-100">
+                            <div class="card-body stat-card">
+                                <div class="icon-lg bg-warning bg-opacity-10 text-warning" aria-hidden="true">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <h3 class="card-title text-muted mb-2 h6">Last Semester GPA</h3>
+                                {% if last_semester %}
+                                    <p class="value" aria-label="Last semester GPA">{{ last_gpa|default:"N/A" }}</p>
+                                    <small class="{% if last_gpa >= 3.5 %}text-success{% elif last_gpa %}text-danger{% else %}text-muted{% endif %}">
+                                        {% if last_gpa %}
+                                            {% if last_gpa >= 3.5 %}
+                                                Excellent
+                                            {% elif last_gpa >= 2.0 %}
+                                                Average
+                                            {% else %}
+                                                Below Average
+                                            {% endif %}
+                                        {% else %}
+                                            Not available
+                                        {% endif %}
+                                    </small>
+                                {% else %}
+                                    <p class="value text-muted">N/A</p>
+                                    <small class="text-muted">No data</small>
+                                {% endif %}
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6">
+                        <article class="card h-100">
+                            <div class="card-body stat-card">
+                                <div class="icon-lg bg-success bg-opacity-10 text-success" aria-hidden="true">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <h3 class="card-title text-muted mb-2 h6">Academic Year</h3>
+
+                                {% if student.year.name == "Graduated" %}
+                                    <p class="value">Graduated</p>
+                                    <small class="text-primary">-</small>
+                                {% else %}
+                                    <p class="value">Year {{ student.year.number }}</p>
+                                    <small class="text-primary">{{ student.semester.name }} Semester</small>
+                                {% endif %}
+                            </div>
+                        </article>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Two-Column Layout -->
             <div class="row g-4">
                 <!-- Upcoming Deadlines -->
-                <div class="col-lg-6">
-                    <div class="card h-100">
+                <section class="col-lg-6" aria-labelledby="deadlines-heading">
+                    <article class="card h-100">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0"><i class="fas fa-calendar-day text-danger me-2"></i> Upcoming Deadlines</h5>
+                            <h2 id="deadlines-heading" class="h5 mb-0">
+                                <i class="fas fa-calendar-day text-danger me-2" aria-hidden="true"></i> Upcoming Deadlines
+                            </h2>
                             <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
                         </div>
                         <div class="card-body p-0">
@@ -132,12 +148,16 @@
                                 {% for deadline in upcoming_deadlines|slice:":3" %}
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h6 class="mb-1">{{ deadline.title }}</h6>
+                                        <h3 class="h6 mb-1">{{ deadline.title }}</h3>
                                         <small class="text-muted">{{ deadline.course }}</small>
                                     </div>
                                     <div class="text-end">
                                         <span class="badge bg-{{ deadline.priority_color }}">{{ deadline.days_remaining }}</span>
-                                        <div class="text-muted small">{{ deadline.due_date|date:"D, h:i A" }}</div>
+                                        <div class="text-muted small">
+                                            <time datetime="{{ deadline.due_date|date:'Y-m-d' }}">
+                                                {{ deadline.due_date|date:"D, h:i A" }}
+                                            </time>
+                                        </div>
                                     </div>
                                 </li>
                                 {% empty %}
@@ -147,14 +167,16 @@
                                 {% endfor %}
                             </ul>
                         </div>
-                    </div>
-                </div>
+                    </article>
+                </section>
 
                 <!-- Recent Announcements -->
-                <div class="col-lg-6">
-                    <div class="card h-100">
+                <section class="col-lg-6" aria-labelledby="announcements-heading">
+                    <article class="card h-100">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0"><i class="fas fa-bullhorn text-primary me-2"></i> Recent Announcements</h5>
+                            <h2 id="announcements-heading" class="h5 mb-0">
+                                <i class="fas fa-bullhorn text-primary me-2" aria-hidden="true"></i> Recent Announcements
+                            </h2>
                             <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
                         </div>
                         <div class="card-body p-0">
@@ -162,8 +184,12 @@
                                 {% for announcement in recent_announcements|slice:":3" %}
                                 <a href="#" class="list-group-item list-group-item-action">
                                     <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">{{ announcement.title }}</h6>
-                                        <small class="text-muted">{{ announcement.posted_at|timesince }} ago</small>
+                                        <h3 class="h6 mb-1">{{ announcement.title }}</h3>
+                                        <small class="text-muted">
+                                            <time datetime="{{ announcement.posted_at|date:'Y-m-d' }}">
+                                                {{ announcement.posted_at|timesince }} ago
+                                            </time>
+                                        </small>
                                     </div>
                                     <p class="mb-1 small text-muted">{{ announcement.summary }}</p>
                                 </a>
@@ -174,26 +200,29 @@
                                 {% endfor %}
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </article>
+                </section>
 
                 <!-- Current Courses -->
-                <div class="col-12">
-                    <div class="card">
+                <section class="col-12" aria-labelledby="courses-heading">
+                    <article class="card">
                         <div class="card-header">
-                            <h5 class="mb-0"><i class="fas fa-book text-success me-2"></i> Current Courses</h5>
+                            <h2 id="courses-heading" class="h5 mb-0">
+                                <i class="fas fa-book text-success me-2" aria-hidden="true"></i> Current Courses
+                            </h2>
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead>
+                                <table class="table table-hover align-middle mb-0" aria-describedby="courses-heading">
+                                    <caption class="visually-hidden">List of current courses</caption>
+                                    <thead class="table-light">
                                         <tr>
-                                            <th>Course Code</th>
-                                            <th>Course Title</th>
-                                            <th>Instructor</th>
-                                            <th>Schedule</th>
-                                            <th>Progress</th>
-                                            <th>Actions</th>
+                                            <th scope="col">Course Code</th>
+                                            <th scope="col">Course Title</th>
+                                            <th scope="col">Instructor</th>
+                                            <th scope="col">Schedule</th>
+                                            <th scope="col">Progress</th>
+                                            <th scope="col">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -205,19 +234,27 @@
                                             <td>{{ registration.course.schedule }}</td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <div class="progress flex-grow-1">
-                                                        <div class="progress-bar bg-{{ registration.get_progress_color }}" style="width: {{ registration.progress }}%"></div>
+                                                    <div class="progress flex-grow-1" style="height: 8px;">
+                                                        <div class="progress-bar bg-{{ registration.get_progress_color }}" 
+                                                             role="progressbar" 
+                                                             style="width: {{ registration.progress }}%" 
+                                                             aria-valuenow="{{ registration.progress }}" 
+                                                             aria-valuemin="0" 
+                                                             aria-valuemax="100">
+                                                        </div>
                                                     </div>
                                                     <small class="ms-2">{{ registration.progress }}%</small>
                                                 </div>
                                             </td>
                                             <td>
-                                                <div class="btn-group btn-group-sm">
+                                                <div class="btn-group btn-group-sm" role="group">
                                                     <a href="#" class="btn btn-outline-primary">
-                                                        <i class="fas fa-book-open me-1"></i>Materials
+                                                        <i class="fas fa-book-open me-1" aria-hidden="true"></i>
+                                                        <span>Materials</span>
                                                     </a>
                                                     <a href="#" class="btn btn-outline-secondary">
-                                                        <i class="fas fa-chart-bar"></i>
+                                                        <i class="fas fa-chart-bar" aria-hidden="true"></i>
+                                                        <span class="visually-hidden">Statistics</span>
                                                     </a>
                                                 </div>
                                             </td>
@@ -233,39 +270,45 @@
                                 </table>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </article>
+                </section>
             </div>
 
         {% else %}
             <!-- Error State -->
-            <div class="row justify-content-center mt-5">
+            <section class="row justify-content-center mt-5" aria-labelledby="error-heading">
                 <div class="col-md-8 text-center">
-                    <div class="card border-danger">
+                    <article class="card border-danger">
                         <div class="card-body py-5">
-                            <i class="fas fa-exclamation-triangle fa-4x text-danger mb-4"></i>
-                            <h1 class="text-danger">Student Profile Not Found</h1>
+                            <i class="fas fa-exclamation-triangle fa-4x text-danger mb-4" aria-hidden="true"></i>
+                            <h1 id="error-heading" class="text-danger">Student Profile Not Found</h1>
                             <p class="lead">We couldn't retrieve your academic information.</p>
                             <div class="mt-4">
                                 <a href="#" class="btn btn-primary me-2">
-                                    <i class="fas fa-redo me-1"></i> Try Again
+                                    <i class="fas fa-redo me-1" aria-hidden="true"></i> Try Again
                                 </a>
                                 <a href="#" class="btn btn-outline-secondary">
-                                    <i class="fas fa-headset me-1"></i> Contact Support
+                                    <i class="fas fa-headset me-1" aria-hidden="true"></i> Contact Support
                                 </a>
                             </div>
                         </div>
-                    </div>
+                    </article>
                 </div>
-            </div>
+            </section>
         {% endif %}
-    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light py-3 mt-auto">
+        <div class="container text-center text-muted small">
+            <p class="mb-0">&copy; {% now "Y" %} Student Portal. All rights reserved.</p>
+        </div>
+    </footer>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Custom JS -->
-     <script src="{% static 'portal/js/student_portal.js' %}"></script>
-
+    <script src="{% static 'portal/js/student_portal.js' %}"></script>
 </body>
 </html>

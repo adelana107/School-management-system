@@ -55,6 +55,8 @@ urlpatterns = [
     path('pay_school_fees/', views.pay_school_fees, name='pay_school_fees'),
     path('verify_school_fees/', views.school_fees_verify_payment, name='school_fees_verify_payment'),
 
+    path('api/online-status/', views.online_status, name='online-status'),
+
 
 
     

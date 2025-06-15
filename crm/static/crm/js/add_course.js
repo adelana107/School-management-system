@@ -86,3 +86,65 @@
                 $('#quickAddBtn').removeClass('show');
             }
         });
+
+
+
+$(document).ready(function() {
+            // Handle schedule button clicks
+            $('.schedule-btn').click(function() {
+                const courseId = $(this).data('course-id');
+                $('#courseId').val(courseId);
+                
+                // Load existing schedules for this course
+                $.get(`/api/courses/${courseId}/schedules/`, function(data) {
+                    let schedulesHtml = '';
+                    if (data.length > 0) {
+                        data.forEach(schedule => {
+                            schedulesHtml += `
+                                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                    <span class="badge bg-info">
+                                        ${schedule.day} ${schedule.start_time} - ${schedule.end_time}
+                                    </span>
+                                    <button class="btn btn-sm btn-outline-danger delete-schedule" data-schedule-id="${schedule.id}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        schedulesHtml = '<p class="text-muted">No schedules added yet.</p>';
+                    }
+                    $('#currentSchedules').html(schedulesHtml);
+                });
+            });
+            
+            // Handle schedule form submission
+            $('#scheduleForm').submit(function(e) {
+                e.preventDefault();
+                const courseId = $('#courseId').val();
+                const formData = $(this).serialize();
+                
+                $.post(`/api/courses/${courseId}/schedules/`, formData, function(data) {
+                    // Reload schedules after adding new one
+                    $('.schedule-btn[data-course-id="' + courseId + '"]').click();
+                });
+            });
+            
+            // Handle schedule deletion
+            $(document).on('click', '.delete-schedule', function() {
+                const scheduleId = $(this).data('schedule-id');
+                const courseId = $('#courseId').val();
+                
+                if (confirm('Are you sure you want to delete this schedule?')) {
+                    $.ajax({
+                        url: `/api/schedules/${scheduleId}/`,
+                        type: 'DELETE',
+                        success: function() {
+                            // Reload schedules after deletion
+                            $('.schedule-btn[data-course-id="' + courseId + '"]').click();
+                        }
+                    });
+                }
+            });
+        });
+

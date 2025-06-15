@@ -91,7 +91,7 @@
                                     </td>
                                     <td>
                                         {% if course.course.lecturer %}
-                                            {{ course.course.lecturer.get_full_name }}
+                                            {{ course.course.lecturer }}
                                         {% else %}
                                             <span class="badge badge-not-assigned">Not assigned</span>
                                         {% endif %}
@@ -142,11 +142,11 @@
                                                         <ul class="course-details-list">
                                                             <li>
                                                                 <span class="detail-label">Lecturer:</span>
-                                                                <span>{% if course.course.lecturer %}{{ course.course.lecturer.get_full_name }}{% else %}Not assigned{% endif %}</span>
+                                                                <span>{% if course.course.lecturer %}{{ course.course.lecturer}}{% else %}Not assigned{% endif %}</span>
                                                             </li>
                                                             <li>
                                                                 <span class="detail-label">Schedule:</span>
-                                                                <span>{% if course.course.schedule %}{{ course.course.schedule }}{% else %}Not scheduled{% endif %}</span>
+                                                            <span>{% if course.course.days %}{{ course.course.days }} {{ course.course.time }}   {% else %}Not scheduled{% endif %}</span>
                                                             </li>
                                                             <li>
                                                                 <span class="detail-label">Venue:</span>
@@ -164,13 +164,15 @@
                                                     <p>{{ course.course.description|default:"No description available." }}</p>
                                                 </div>
                                             </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                <a href="#" class="btn btn-primary">
-                                                    <i class="fas fa-book-open me-2"></i>View Syllabus
-                                                </a>
-                                            </div>
-                                        </div>
+ {% if course.course.syllabus %}
+    <a href="{{ course.course.syllabus.url }}" class="btn btn-primary" target="_blank">
+        <i class="fas fa-book-open me-2"></i>View Syllabus
+    </a>
+{% else %}
+    <button class="btn btn-secondary" disabled>
+        <i class="fas fa-book-open me-2"></i>No Syllabus
+    </button>
+{% endif %}                                      </div>
                                     </div>
                                 </div>
                                 {% empty %}

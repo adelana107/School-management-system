@@ -470,35 +470,42 @@ def revoke_application(request, application_id):
 
 def move_to_new_semester(request):
     students = Student.objects.all()
-    
+
+    # Ensure a 'Graduated' year object exists with a dummy number
+    graduated_year, _ = Year.objects.get_or_create(name="Graduated", defaults={'number': 999})
 
     for student in students:
         current_year = student.year
         current_semester = student.semester
 
-        # Get First and Second semester for this year
         first_semester = Semester.objects.filter(name="First", year=current_year).first()
         second_semester = Semester.objects.filter(name="Second", year=current_year).first()
 
         if not first_semester or not second_semester:
-            messages.error(request, f"Error: Year {current_year.number} does not have both semesters!")
+            messages.error(request, f"Error: Year {current_year} does not have both semesters!")
             return redirect("dashboard")
 
-        # Move to next semester or next year
-        if current_semester == first_semester:
+        if current_semester and current_semester.id == first_semester.id:
             student.semester = second_semester
         else:
             next_year = Year.objects.filter(number=current_year.number + 1).first()
             if next_year:
-                student.year = next_year
-                student.semester = Semester.objects.filter(name="First", year=next_year).first()
+                next_first_semester = Semester.objects.filter(name="First", year=next_year).first()
+                if next_first_semester:
+                    student.year = next_year
+                    student.semester = next_first_semester
+                else:
+                    messages.error(request, f"Error: First semester not found for next year ({next_year})")
+                    return redirect("dashboard")
             else:
-                student.status = "Graduated"  # Final year students graduate
+                student.year = graduated_year
+                # Optional: student.semester = None
 
         student.save()
 
     messages.success(request, "All students moved to the new semester successfully!")
     return redirect("semester_success")
+
 
 
 def move_semester_confirmationPage(request):

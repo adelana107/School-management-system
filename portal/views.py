@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import ApplicationForm, StudentLoginForm
-from .models import Application, Department, State, Lga, Student, Course, Year, RegisteredCourse, Headline, Category, Notification   # Ensure you import your model
+from .models import Application, Department, State, Lga, Student, Course, Year, RegisteredCourse, Headline, Category, Notification, TimeTable   # Ensure you import your model
 from django.http import JsonResponse
 import json
 from django.contrib.auth import authenticate, login, logout
@@ -21,6 +21,9 @@ from django.http import QueryDict
 import base64
 
 # Create your views here.
+
+
+
 
 
 @login_required
@@ -302,6 +305,8 @@ def applicant_profile(request):
 def student_portal(request):
     user = request.user
     student = Student.objects.filter(application_number=user.username).first()
+    notifications = Notification.objects.all()
+    timetables = TimeTable.objects.filter(department=student.department, semester=student.semester)
 
     if not student:
         return render(request, "error.html", {"message": "Student profile not found."})
@@ -328,6 +333,8 @@ def student_portal(request):
         'total_unit': total_units,
         'units_remaining': units_remaining,
         'registered_courses': registered_courses,
+        'notifications': notifications,
+        'timetables': timetables,
         'last_gpa': last_gpa,
         'last_semester': last_semester,
         'update_profile_picture_url': reverse('update_profile_picture'),
@@ -348,16 +355,16 @@ def student_biodata(request):
     return render(request, "biodata.html", {"student": student})
 
 
+@login_required
 def CourseRegistration(request):
-    user = request.user  # Get the logged-in user
-    student = Student.objects.filter(application_number=user.username).first()
-    courses = Course.objects.filter(
-        department=student.department,
-        semester=student.semester,
-    )  # Fetch their application
+    student = Student.objects.filter(application_number=request.user.username).first()
+    if not student:
+        return redirect('portal')  # or raise 404
 
-    return render (request, 'course_registration.html', {"courses": courses, "student": student})
+    courses = Course.objects.filter(department=student.department, semester=student.semester)
+    return render(request, 'course_registration.html', {"courses": courses, "student": student})
 
+@login_required
 def submit_registration(request):
     if request.method == "POST":
         try:
@@ -365,21 +372,18 @@ def submit_registration(request):
             course_ids = data.get("courses", [])
             student = Student.objects.get(application_number=request.user.username)
 
-            # Assuming student.semester is already set
-            semester = student.semester
-
-            # Register selected courses
             for course_id in course_ids:
                 course = Course.objects.get(id=course_id)
                 RegisteredCourse.objects.get_or_create(
                     student=student,
                     course=course,
-                    semester=semester  # ✅ include semester
+                    semester=student.semester
                 )
 
             return JsonResponse({"success": True, "message": "Courses registered successfully!"})
         except Exception as e:
             return JsonResponse({"success": False, "message": str(e)})
+
     return JsonResponse({"success": False, "message": "Invalid request method."})
 
 
@@ -493,3 +497,7 @@ def View_Notification(request, Notification_id):
         'notification': notification,
         'student': student,
     })
+
+
+def online_status(request):
+    return JsonResponse({'status': 'online'})
