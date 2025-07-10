@@ -1,5 +1,5 @@
 from django import forms
-from .models import Application, School, Department, State, Lga, AcademicSession, Year, Semester
+from .models import Application, School, Department, State, Lga, AcademicSession, Year, Semester, Screening
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
@@ -160,6 +160,15 @@ class ApplicationForm(forms.ModelForm):
         elif self.instance and self.instance.pk and hasattr(self.instance, 'state_of_origin'):
             self.fields['local_government'].queryset = self.instance.state_of_origin.lgas.order_by('name')
 
+
+    # ✅ Limit academic session to only the latest one
+        latest_session = AcademicSession.objects.order_by('-id').first()
+        if latest_session:
+            self.fields['academic_session'].queryset = AcademicSession.objects.filter(id=latest_session.id)
+            self.fields['academic_session'].initial = latest_session
+            # Optional: to make it readonly in UI
+            # self.fields['academic_session'].disabled = True        
+
     def clean_phone_number(self):
         phone_number = self.cleaned_data.get('phone_number')
         if not phone_number.isdigit():
@@ -217,3 +226,25 @@ class StudentLoginForm(forms.Form):
     application_number = forms.CharField(label="Application Number or Matric Number", max_length=20)
     surname = forms.CharField(label="Surname", widget=forms.PasswordInput)
 
+class ScreeningForm(forms.ModelForm):
+    class Meta:
+        model = Screening
+        fields = ['ssce_result', 'jamb_result']
+        widgets = {
+            'ssce_result': forms.FileInput(attrs={'class': 'file-upload-input'}),
+            'jamb_result': forms.FileInput(attrs={'class': 'file-upload-input'}),
+        }
+        labels = {
+            'ssce_result': 'Upload SSCE Result',
+            'jamb_result': 'Upload JAMB Result',
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        ssce_result = cleaned_data.get('ssce_result')
+        jamb_result = cleaned_data.get('jamb_result')
+
+        if not ssce_result or not jamb_result:
+            raise forms.ValidationError("Both result file must be uploaded.")
+        
+        return cleaned_data

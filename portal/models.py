@@ -5,8 +5,13 @@ from django.dispatch import receiver
 from django.contrib.auth.hashers import make_password
 from django.utils.timezone import now
 from multiselectfield import MultiSelectField
+from django.utils import timezone
+from django.utils.timezone import now
 
 # ------------------ CATEGORY MODEL ------------------
+
+
+
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
@@ -57,10 +62,16 @@ class Lecturer(models.Model):
         return self.name    
     
 class TimeTable(models.Model):
-    School = models.ForeignKey(School, on_delete=models.CASCADE, related_name="timetables")
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name="timetables")
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name="timetables")
     file = models.FileField(upload_to="timetables/", blank=True, null=True)
+
+    class Meta:
+        unique_together = ("department", "semester")
+    def save(self, *args, **kwargs):
+        if not self.file:
+            raise ValueError("File cannot be empty")
+        super().save(*args, **kwargs)   
 
     def __str__(self):
         return f"{self.semester.name} semester timetable for {self.department.name}"    
@@ -161,7 +172,11 @@ class Application(models.Model):
     school = models.ForeignKey(School, on_delete=models.CASCADE)
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
     application_number = models.CharField(max_length=10, unique=True, blank=True)
-    profile_picture = models.ImageField(upload_to="profile_pics/", blank=True, null=True, default="profile_pics/default-profile.png")
+    profile_picture = models.ImageField(
+        upload_to="profile_pics/", 
+        blank=True, 
+        null=True, 
+        default="default-profile.png")
     created_at = models.DateTimeField(default=now, editable=True)
     academic_session = models.ForeignKey(AcademicSession, on_delete=models.CASCADE, related_name="applications")
     is_approved = models.BooleanField(default=False)
@@ -208,41 +223,43 @@ class Student(models.Model):
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=11)
     address = models.CharField(max_length=100)
-    state_of_origin = models.ForeignKey(State, on_delete=models.CASCADE)
-    local_government = models.ForeignKey(Lga, on_delete=models.CASCADE)
+    state_of_origin = models.ForeignKey('State', on_delete=models.CASCADE)
+    local_government = models.ForeignKey('Lga', on_delete=models.CASCADE)
     date_of_birth = models.DateField()
-    school = models.ForeignKey(School, on_delete=models.CASCADE)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE)
+    school = models.ForeignKey('School', on_delete=models.CASCADE)
+    department = models.ForeignKey('Department', on_delete=models.CASCADE)
     application_number = models.CharField(max_length=10, unique=True, blank=True)
-    profile_picture = models.ImageField(upload_to="profile_pics/", blank=True, null=True, default="profile_pics/default-profile.png")
-    academic_session = models.ForeignKey(AcademicSession, on_delete=models.CASCADE, related_name="students")
+    profile_picture = models.ImageField(
+        upload_to="profile_pics/", 
+        blank=True, 
+        null=True, 
+        default="default-profile.png"
+    )
+    academic_session = models.ForeignKey('AcademicSession', on_delete=models.CASCADE, related_name="students")
     created_at = models.DateTimeField(default=now, editable=True)
-    year = models.ForeignKey(Year, on_delete=models.CASCADE)
-    semester = models.ForeignKey(Semester, null=True, blank=True, on_delete=models.SET_NULL)
+    year = models.ForeignKey('Year', on_delete=models.CASCADE)
+    semester = models.ForeignKey('Semester', null=True, blank=True, on_delete=models.SET_NULL)
     has_paid_school_fees = models.BooleanField(default=False)
+    has_paid_acceptance_fee = models.BooleanField(default=False)
     matric_number = models.CharField(max_length=20, unique=True, blank=True, null=True)
 
     def generate_matric_number(self):
-      if self.has_paid_school_fees and not self.matric_number:
-        base = "MATZ"
-        count = Student.objects.count() + 1
+        if self.has_paid_school_fees and not self.matric_number:
+            base = "FISHER"
+            dept_code = getattr(self.department, "code", str(self.department.id))
+            session_code = getattr(self.academic_session, "year", str(self.academic_session.id))
+            count = Student.objects.filter(department=self.department, academic_session=self.academic_session).count() + 1
 
-        while True:
-            number = f"{base}{count:04d}"
-            if not Student.objects.filter(matric_number=number).exists():
-                self.matric_number = number
-                break
-            count += 1
+            while True:
+                number = f"{base}-{dept_code}-{session_code}-{count:04d}"
+                if not Student.objects.filter(matric_number=number).exists():
+                    self.matric_number = number
+                    break
+                count += 1
 
     def save(self, *args, **kwargs):
-       self.generate_matric_number()
-       super().save(*args, **kwargs)
-
-
-    
-
-    def __str__(self):
-        return f"{self.matric_number} ({self.surname}) ({self.other_name})"
+        self.generate_matric_number()
+        super().save(*args, **kwargs)
 
     def calculate_cgpa(self):
         grades = self.grades.filter(course__semester__year=self.year) 
@@ -284,6 +301,63 @@ class Student(models.Model):
             total_qp += gp * cu
             total_units += cu
         return round(total_qp / total_units, 2) if total_units else 0.0
+
+    def __str__(self):
+        return f"{self.matric_number} ({self.surname}) ({self.first_name})"
+
+
+class PaymentHistory(models.Model):
+    PAYMENT_TYPE_CHOICES = [
+        ('School Fees', 'School Fees'),
+        ('Acceptance Fees', 'Acceptance Fees'),
+    ]
+
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='payment_histories')
+    semester = models.ForeignKey(Semester, on_delete=models.SET_NULL, null=True, blank=True)
+
+    reference = models.CharField(max_length=100, unique=True)
+    amount = models.PositiveIntegerField(help_text="Amount in kobo")
+    status = models.CharField(max_length=20, default='success')
+    date_paid = models.DateTimeField(default=timezone.now)
+    payment_type = models.CharField(
+        max_length=50,
+        choices=PAYMENT_TYPE_CHOICES,
+        default='School Fees'
+    )
+    year = models.ForeignKey(Year, on_delete=models.CASCADE)  # ✅ New field
+
+    def amount_display(self):
+        return self.amount / 100
+
+    def __str__(self):
+        return f"{self.student.application_number} - {self.payment_type} - ₦{self.amount_display():,.2f}"
+
+
+
+# models.py
+class Screening(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('declined', 'Declined'),
+    ]
+    
+    ssce_result = models.FileField(upload_to="ssce_results/", blank=True, null=True)
+    jamb_result = models.FileField(upload_to="jamb_results/", blank=True, null=True)
+    student = models.OneToOneField(Student, on_delete=models.CASCADE, related_name='screening')
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    review_notes = models.TextField(blank=True, null=True)
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Screening for {self.student.application_number} - {self.student.surname} {self.student.first_name}"
+    
+    @property
+    def passed_screening(self):
+        """Backward compatibility with old boolean field"""
+        return self.status == 'approved'
+
 
 # ------------------ GRADE MODEL ------------------
 class Grade(models.Model):

@@ -9,11 +9,9 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css">
     <link rel="stylesheet" href="{% static 'crm/css/applicant_list.css' %}">
-    
-    <!-- Custom CSS -->
-   
 </head>
 
 <body>
@@ -22,118 +20,286 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="text-primary mb-0">
-                <i class="fas fa-users me-2"></i>Applicant Management
-            </h2>
-            <div class="d-flex">
-                <div class="search-container me-3">
-                    <i class="fas fa-search"></i>
-                    <input type="text" class="form-control search-input" placeholder="Search applications..." id="searchInput">
+        <!-- Header with Stats -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+            <div>
+                <h2 class="text-primary mb-0">
+                    <i class="fas fa-users me-2"></i>Applicant Management
+                </h2>
+                <p class="text-muted mb-0">Track and manage all applicant records</p>
+            </div>
+            <div class="stats-container d-flex gap-3 mt-2 mt-md-0">
+                <div class="stat-card bg-primary">
+                    <div class="stat-value">{{ total_applications }}</div>
+                    <div class="stat-label">Total Applicants</div>
                 </div>
-                <select class="form-select status-filter" id="statusFilter">
-                    <option value="all">All Statuses</option>
-                    <option value="approved">Approved</option>
-                    <option value="pending">Pending</option>
-                </select>
+                <div class="stat-card bg-success">
+                    <div class="stat-value">{{ approved_applicants }}</div>
+                    <div class="stat-label">Approved</div>
+                </div>
+                <div class="stat-card bg-warning">
+                    <div class="stat-value">{{ pending_applicants }}</div>
+                    <div class="stat-label">Pending</div>
+                </div>
             </div>
         </div>
 
-        <!-- Applications Accordion -->
-        <div class="accordion" id="schoolAccordion">
-            {% for school, departments in grouped_applications.items %}
-            <div class="accordion-item mb-2">
-                <h2 class="accordion-header" id="heading{{ forloop.counter }}">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
-                            data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false">
-                        <i class="fas fa-school me-2"></i> {{ school }}
-                        <span class="badge bg-primary rounded-pill ms-2">{{ departments|length }} Departments</span>
+        <!-- Filter and Search Bar -->
+        <div class="card filter-card mb-4 animate__animated animate__fadeIn">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="search-container">
+                            <i class="fas fa-search"></i>
+                            <input type="text" class="form-control search-input" 
+                                   placeholder="Search applications..." id="searchInput"
+                                   aria-label="Search applications"
+                                   value="{{ current_filters.search }}">
+                            <button class="clear-search" id="clearSearch" aria-label="Clear search">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <select class="form-select status-filter" id="statusFilter">
+                                    <option value="all" {% if current_filters.status == 'all' %}selected{% endif %}>All Statuses</option>
+                                    <option value="approved" {% if current_filters.status == 'approved' %}selected{% endif %}>Approved</option>
+                                    <option value="pending" {% if current_filters.status == 'pending' %}selected{% endif %}>Pending</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="sessionFilter">
+                                    <option value="all" {% if current_filters.session == 'all' %}selected{% endif %}>All Sessions</option>
+                                    {% for session in academic_sessions %}
+                                    <option value="{{ session }}" {% if current_filters.session == session %}selected{% endif %}>{{ session }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-outline-primary w-100" id="advancedFilterBtn" data-bs-toggle="collapse" data-bs-target="#advancedFilters">
+                                    <i class="fas fa-sliders-h me-1"></i> Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Advanced Filters -->
+                <div class="advanced-filters mt-3 collapse" id="advancedFilters">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">School</label>
+                            <select class="form-select" id="schoolFilter">
+                                <option value="all" {% if current_filters.school == 'all' %}selected{% endif %}>All Schools</option>
+                                {% for school in schools %}
+                                <option value="{{ school }}" {% if current_filters.school == school %}selected{% endif %}>{{ school }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Department</label>
+                            <select class="form-select" id="departmentFilter">
+                                <option value="all" {% if current_filters.department == 'all' %}selected{% endif %}>All Departments</option>
+                                {% for department in departments %}
+                                <option value="{{ department }}" {% if current_filters.department == department %}selected{% endif %}>{{ department }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Date From</label>
+                            <input type="date" class="form-control" id="dateFrom" value="{{ current_filters.date_from }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Date To</label>
+                            <input type="date" class="form-control" id="dateTo" value="{{ current_filters.date_to }}">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end mt-3">
+                        <button class="btn btn-sm btn-outline-secondary me-2" id="resetFilters">
+                            Reset Filters
+                        </button>
+                        <button class="btn btn-sm btn-primary" id="applyFilters">
+                            Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Mode Toggle -->
+        <div class="view-mode-toggle mb-3">
+            <div class="btn-group" role="group">
+                <a href="?view=grouped{% for k,v in current_filters.items %}{% if v and k != 'view' %}&{{k}}={{v}}{% endif %}{% endfor %}" 
+                   class="btn btn-outline-primary {% if current_filters.view_mode == 'grouped' %}active{% endif %}">
+                    <i class="fas fa-layer-group me-1"></i> Grouped View
+                </a>
+                <a href="?view=list{% for k,v in current_filters.items %}{% if v and k != 'view' %}&{{k}}={{v}}{% endif %}{% endfor %}" 
+                   class="btn btn-outline-primary {% if current_filters.view_mode == 'list' %}active{% endif %}">
+                    <i class="fas fa-list me-1"></i> List View
+                </a>
+            </div>
+            <div class="filter-summary badge bg-light text-dark ms-3">
+                Showing {{ filtered_count }} of {{ total_applications }} applications
+            </div>
+        </div>
+
+        <!-- Applications Summary Chart -->
+        <div class="card mb-4 animate__animated animate__fadeIn">
+            <div class="card-body">
+                <h5 class="card-title d-flex justify-content-between align-items-center">
+                    <span>Applications Overview</span>
+                    <select class="form-select form-select-sm w-auto" id="chartTimeRange">
+                        <option value="week">Last 7 Days</option>
+                        <option value="month">Last 30 Days</option>
+                        <option value="year" selected>Last 12 Months</option>
+                    </select>
+                </h5>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="applicationsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grouped View -->
+        {% if current_filters.view_mode == 'grouped' %}
+        <div class="accordion" id="sessionAccordion">
+            {% for session, schools in grouped_applications.items %}
+            <div class="accordion-item mb-3 animate__animated animate__fadeIn">
+                <h2 class="accordion-header" id="sessionHeading{{ forloop.counter }}">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#sessionCollapse{{ forloop.counter }}" aria-expanded="true">
+                        <i class="fas fa-calendar-alt me-2"></i> Academic Session: {{ session }}
+                        <span class="badge bg-primary rounded-pill ms-2">{{ schools|length }} Schools</span>
                     </button>
                 </h2>
-                <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" 
-                     aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#schoolAccordion">
+                <div id="sessionCollapse{{ forloop.counter }}" class="accordion-collapse collapse show"
+                     aria-labelledby="sessionHeading{{ forloop.counter }}" data-bs-parent="#sessionAccordion">
                     <div class="accordion-body p-0">
-                        <div class="accordion" id="departmentAccordion{{ forloop.counter }}">
-                            {% for department, applications in departments.items %}
-                            <div class="accordion-item border-0">
-                                <h2 class="accordion-header" id="departmentHeading{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
+                        <!-- School Accordion -->
+                        <div class="accordion" id="schoolAccordion{{ forloop.counter }}">
+                            {% for school, departments in schools.items %}
+                            <div class="accordion-item mb-2">
+                                <h2 class="accordion-header" id="heading{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
-                                            data-bs-target="#departmentCollapse{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
-                                        <i class="fas fa-book me-2"></i> {{ department }}
-                                        <span class="badge bg-secondary rounded-pill ms-2">{{ applications|length }} Applicants</span>
+                                            data-bs-target="#collapse{{ forloop.parentloop.counter }}-{{ forloop.counter }}" 
+                                            aria-expanded="false">
+                                        <i class="fas fa-school me-2"></i> {{ school }}
+                                        <span class="badge bg-primary rounded-pill ms-2">{{ departments|length }} Departments</span>
                                     </button>
                                 </h2>
-                                <div id="departmentCollapse{{ forloop.parentloop.counter }}-{{ forloop.counter }}" 
-                                     class="accordion-collapse collapse"
-                                     aria-labelledby="departmentHeading{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
-                                     data-bs-parent="#departmentAccordion{{ forloop.parentloop.counter }}">
+                                <div id="collapse{{ forloop.parentloop.counter }}-{{ forloop.counter }}" 
+                                     class="accordion-collapse collapse" 
+                                     aria-labelledby="heading{{ forloop.parentloop.counter }}-{{ forloop.counter }}" 
+                                     data-bs-parent="#schoolAccordion{{ forloop.parentloop.counter }}">
                                     <div class="accordion-body p-0">
-                                        <div class="table-responsive">
-                                            <table class="table table-hover align-middle">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th>#</th>
-                                                        <th>Application No</th>
-                                                        <th>Name</th>
-                                                        <th>Contact</th>
-                                                        <th>Status</th>
-                                                        <th>Date</th>
-                                                        <th>Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {% for application in applications %}
-                                                    <tr class="application-row" data-status="{% if application.is_approved %}approved{% else %}pending{% endif %}">
-                                                        <td>{{ forloop.counter }}</td>
-                                                        <td>{{ application.application_number }}</td>
-                                                        <td>
-                                                            <strong>{{ application.surname }} {{ application.first_name }}</strong>
-                                                        </td>
-                                                        <td>
-                                                            <div>{{ application.email }}</div>
-                                                            <small class="text-muted">{{ application.phone_number }}</small>
-                                                        </td>
-                                                        <td>
-                                                            {% if application.is_approved %}
-                                                                <span class="badge badge-approved rounded-pill">
-                                                                    <i class="fas fa-check-circle me-1"></i> Approved
-                                                                </span>
-                                                            {% else %}
-                                                                <span class="badge badge-pending rounded-pill">
-                                                                    <i class="fas fa-clock me-1"></i> Pending
-                                                                </span>
-                                                            {% endif %}
-                                                        </td>
-                                                        <td>{{ application.submission_date|date:"M d, Y" }}</td>
-                                                        <td>
-                                                            <div class="d-flex">
-                                                                <a href="{% url 'view_applicant' application.id %}" 
-                                                                   class="btn btn-sm btn-primary me-2" 
-                                                                   title="View Details">
-                                                                    <i class="fas fa-eye"></i>
-                                                                </a>
-                                                                <div class="dropdown">
-                                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
-                                                                            type="button" data-bs-toggle="dropdown">
-                                                                        <i class="fas fa-ellipsis-v"></i>
-                                                                    </button>
-                                                                    <ul class="dropdown-menu">
-                                                                        <li><a class="dropdown-item" href="#"><i class="fas fa-edit me-2"></i>Edit</a></li>
-                                                                        <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>Export PDF</a></li>
-                                                                        <li><hr class="dropdown-divider"></li>
-                                                                        <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash-alt me-2"></i>Delete</a></li>
-                                                                    </ul>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                    {% empty %}
-                                                    <tr>
-                                                        <td colspan="7" class="text-center py-4">No applications found in this department.</td>
-                                                    </tr>
-                                                    {% endfor %}
-                                                </tbody>
-                                            </table>
+                                        <!-- Department Accordion -->
+                                        <div class="accordion" id="departmentAccordion{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
+                                            {% for department, applications in departments.items %}
+                                            <div class="accordion-item border-0">
+                                                <h2 class="accordion-header" id="departmentHeading{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
+                                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                                            data-bs-target="#departmentCollapse{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
+                                                        <i class="fas fa-book me-2"></i> {{ department }}
+                                                        <span class="badge bg-secondary rounded-pill ms-2">{{ applications|length }} Applicants</span>
+                                                    </button>
+                                                </h2>
+                                                <div id="departmentCollapse{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" 
+                                                     class="accordion-collapse collapse"
+                                                     aria-labelledby="departmentHeading{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                                                     data-bs-parent="#departmentAccordion{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}">
+                                                    <div class="accordion-body p-0">
+                                                        <div class="table-responsive">
+                                                            <table class="table table-hover align-middle">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th>#</th>
+                                                                        <th>Application No</th>
+                                                                        <th>Name</th>
+                                                                        <th>Contact</th>
+                                                                        <th>Status</th>
+                                                                        <th>Date</th>
+                                                                        <th>Actions</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {% for application in applications %}
+                                                                    <tr class="application-row" 
+                                                                        data-status="{% if application.is_approved %}approved{% else %}pending{% endif %}"
+                                                                        data-session="{{ session }}"
+                                                                        data-school="{{ school }}"
+                                                                        data-department="{{ department }}"
+                                                                        data-date="{{ application.created_at|date:'Y-m-d' }}">
+                                                                        <td>{{ forloop.counter }}</td>
+                                                                        <td>
+                                                                            <span class="badge bg-light text-dark">#{{ application.application_number }}</span>
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="d-flex align-items-center">
+                                                                                <div class="avatar me-2">
+                                                                                    {{ application.first_name|first|upper }}{{ application.surname|first|upper }}
+                                                                                </div>
+                                                                                <div>
+                                                                                    <strong>{{ application.surname }} {{ application.first_name }}</strong>
+                                                                                    <div class="text-muted small">{{ application.gender }} • Age: {{ application.age }}</div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td>
+                                                                            <div>{{ application.email }}</div>
+                                                                            <small class="text-muted">{{ application.phone_number }}</small>
+                                                                        </td>
+                                                                        <td>
+                                                                            {% if application.is_approved %}
+                                                                                <span class="badge badge-approved rounded-pill">
+                                                                                    <i class="fas fa-check-circle me-1"></i> Approved
+                                                                                </span>
+                                                                            {% else %}
+                                                                                <span class="badge badge-pending rounded-pill">
+                                                                                    <i class="fas fa-clock me-1"></i> Pending
+                                                                                </span>
+                                                                            {% endif %}
+                                                                        </td>
+                                                                        <td>{{ application.created_at|date:"M d, Y" }}</td>
+                                                                        <td>
+                                                                            <div class="d-flex">
+                                                                                <a href="{% url 'view_applicant' application.id %}" 
+                                                                                   class="btn btn-sm btn-primary me-2" 
+                                                                                   title="View Details"
+                                                                                   data-bs-toggle="tooltip">
+                                                                                    <i class="fas fa-eye"></i>
+                                                                                </a>
+                                                                                <div class="dropdown">
+                                                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                                                            type="button" data-bs-toggle="dropdown"
+                                                                                            aria-expanded="false"
+                                                                                            aria-label="More actions">
+                                                                                        <i class="fas fa-ellipsis-v"></i>
+                                                                                    </button>
+                                                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                                                        <li><a class="dropdown-item" href="#"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                                                                                        <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>Export PDF</a></li>
+                                                                                        <li><a class="dropdown-item" href="#"><i class="fas fa-envelope me-2"></i>Send Email</a></li>
+                                                                                        <li><hr class="dropdown-divider"></li>
+                                                                                        <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash-alt me-2"></i>Delete</a></li>
+                                                                                    </ul>
+                                                                                </div>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                    {% empty %}
+                                                                    <tr>
+                                                                        <td colspan="7" class="text-center py-4">No applications found in this department.</td>
+                                                                    </tr>
+                                                                    {% endfor %}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
                                         </div>
                                     </div>
                                 </div>
@@ -144,24 +310,118 @@
                 </div>
             </div>
             {% empty %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i> No applications found in the system.
+            <div class="alert alert-info mt-4 animate__animated animate__fadeIn">
+                <i class="fas fa-info-circle me-2"></i> No applications found matching your criteria.
             </div>
             {% endfor %}
         </div>
+        {% else %}
+        <!-- List View -->
+        <div class="card animate__animated animate__fadeIn">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Application No</th>
+                                <th>Applicant</th>
+                                <th>Contact</th>
+                                <th>School/Dept</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in applications_list %}
+                            <tr class="application-row"
+                                data-status="{% if app.is_approved %}approved{% else %}pending{% endif %}"
+                                data-session="{{ app.academic_session.name }}"
+                                data-school="{{ app.school.name }}"
+                                data-department="{{ app.department.name }}"
+                                data-date="{{ app.created_at|date:'Y-m-d' }}">
+                                <td>{{ app.application_number }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar me-2">
+                                            {{ app.first_name|first|upper }}{{ app.surname|first|upper }}
+                                        </div>
+                                        <div>
+                                            <strong>{{ app.surname }}, {{ app.first_name }}</strong>
+                                            <div class="small text-muted">{{ app.academic_session.name }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>{{ app.email }}</div>
+                                    <div class="small text-muted">{{ app.phone_number }}</div>
+                                </td>
+                                <td>
+                                    <div>{{ app.school.name }}</div>
+                                    <div class="small text-muted">{{ app.department.name }}</div>
+                                </td>
+                                <td>
+                                    {% if app.is_approved %}
+                                        <span class="badge badge-approved rounded-pill">
+                                            <i class="fas fa-check-circle me-1"></i> Approved
+                                        </span>
+                                    {% else %}
+                                        <span class="badge badge-pending rounded-pill">
+                                            <i class="fas fa-clock me-1"></i> Pending
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ app.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <div class="d-flex">
+                                        <a href="{% url 'view_applicant' app.id %}" 
+                                           class="btn btn-sm btn-primary me-2" 
+                                           title="View Details"
+                                           data-bs-toggle="tooltip">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                    type="button" data-bs-toggle="dropdown"
+                                                    aria-expanded="false"
+                                                    aria-label="More actions">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><a class="dropdown-item" href="#"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                                                <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>Export PDF</a></li>
+                                                <li><a class="dropdown-item" href="#"><i class="fas fa-envelope me-2"></i>Send Email</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash-alt me-2"></i>Delete</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">No applications found matching your criteria.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Pagination -->
-        {% if is_paginated %}
+        {% if page_obj.paginator.num_pages > 1 %}
         <nav aria-label="Page navigation" class="mt-4">
             <ul class="pagination justify-content-center">
                 {% if page_obj.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page=1" aria-label="First">
+                    <a class="page-link" href="?page=1{% for k,v in current_filters.items %}{% if v and k != 'page' %}&{{k}}={{v}}{% endif %}{% endfor %}" aria-label="First">
                         <span aria-hidden="true">&laquo;&laquo;</span>
                     </a>
                 </li>
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for k,v in current_filters.items %}{% if v and k != 'page' %}&{{k}}={{v}}{% endif %}{% endfor %}" aria-label="Previous">
                         <span aria-hidden="true">&laquo;</span>
                     </a>
                 </li>
@@ -169,20 +429,20 @@
                 
                 {% for num in page_obj.paginator.page_range %}
                 {% if page_obj.number == num %}
-                <li class="page-item active"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
                 {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ num }}{% for k,v in current_filters.items %}{% if v and k != 'page' %}&{{k}}={{v}}{% endif %}{% endfor %}">{{ num }}</a></li>
                 {% endif %}
                 {% endfor %}
                 
                 {% if page_obj.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for k,v in current_filters.items %}{% if v and k != 'page' %}&{{k}}={{v}}{% endif %}{% endfor %}" aria-label="Next">
                         <span aria-hidden="true">&raquo;</span>
                     </a>
                 </li>
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for k,v in current_filters.items %}{% if v and k != 'page' %}&{{k}}={{v}}{% endif %}{% endfor %}" aria-label="Last">
                         <span aria-hidden="true">&raquo;&raquo;</span>
                     </a>
                 </li>
@@ -195,6 +455,8 @@
     <!-- jQuery & Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
 
     <!-- Custom JavaScript -->
     <script src="{% static 'crm/js/applicant_list.js' %}"></script>

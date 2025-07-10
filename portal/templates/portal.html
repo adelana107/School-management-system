@@ -230,8 +230,9 @@
                                         <tr>
                                             <td>{{ registration.course.code }}</td>
                                             <td>{{ registration.course.title }}</td>
-                                            <td>{{ registration.course.instructor.get_full_name }}</td>
-                                            <td>{{ registration.course.schedule }}</td>
+                                            <td>{{ registration.course.lecturer }}</td>
+                                            <td>{{ registration.course.days }}-{{ registration.course.time }}</td>
+                                            
                                             <td>
                                                 <div class="d-flex align-items-center">
                                                     <div class="progress flex-grow-1" style="height: 8px;">
@@ -248,7 +249,7 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group btn-group-sm" role="group">
-                                                    <a href="#" class="btn btn-outline-primary">
+                                                    <a href="{{ course.course.syllabus.url }}" class="btn btn-outline-primary">
                                                         <i class="fas fa-book-open me-1" aria-hidden="true"></i>
                                                         <span>Materials</span>
                                                     </a>
@@ -310,5 +311,96 @@
     
     <!-- Custom JS -->
     <script src="{% static 'portal/js/student_portal.js' %}"></script>
+    
 </body>
+
+<!-- Screening Status Modal -->
+<div class="modal fade" id="screeningStatusModal" tabindex="-1" aria-labelledby="screeningStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            {% if screening_status == 'pending' %}
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title" id="screeningStatusModalLabel">
+                    <i class="fas fa-clock me-2"></i>Screening Under Review
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Your screening application is currently under review by our admissions team.
+                </div>
+                <p>We will notify you once a decision has been made. This process typically takes 3-5 business days.</p>
+                <div class="d-grid gap-2 mt-4">
+                    <button type="button" class="btn btn-warning" data-bs-dismiss="modal">
+                        <i class="fas fa-check me-2"></i> Understood
+                    </button>
+                </div>
+            </div>
+            
+            {% elif screening_status == 'approved' %}
+            {% if not student.has_paid_school_fees %}
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="screeningStatusModalLabel">
+                    <i class="fas fa-check-circle me-2"></i>Screening Approved!
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Congratulations! Your screening application has been approved.
+                </div>
+                <p>You can now proceed with paying your school fees. Please check your email for further instructions.</p>
+                <div class="d-grid gap-2 mt-4">
+                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+                        <i class="fas fa-thumbs-up me-2"></i> Continue
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% elif screening_status == 'declined' %}
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="screeningStatusModalLabel">
+                    <i class="fas fa-times-circle me-2"></i>Screening Declined
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Your screening application has been declined.
+                </div>
+                {% if screening.review_notes %}
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">Review Notes</h6>
+                    </div>
+                    <div class="card-body">
+                        <p>{{ screening.review_notes }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                <p>Please contact the admissions office if you have any questions or would like to appeal this decision.</p>
+                <div class="d-grid gap-2 mt-4">
+                    <a href="#" class="btn btn-danger">
+                        <i class="fas fa-headset me-2"></i> Contact Support
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Show screening status modal on page load if screening exists
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if screening_status %}
+        const screeningModal = new bootstrap.Modal(document.getElementById('screeningStatusModal'));
+        screeningModal.show();
+        {% endif %}
+    });
+</script>
 </html>

@@ -1,5 +1,5 @@
 from django import forms
-from portal.models import Application, Department, School, State, Lga, Student, Headline, Category, Notification, Course, Grade
+from portal.models import Application, Department, School, State, Lga, Student, Headline, Category, Notification, Course, Grade, Semester, TimeTable
 
 
 
@@ -266,3 +266,20 @@ class GradeForm(forms.ModelForm):
                 pass
         elif self.instance.pk:
             self.fields['course'].queryset = self.instance.semester.courses.order_by('title')
+
+
+class TimeTableForm(forms.ModelForm):
+    class Meta:
+        model = TimeTable
+        fields = ['department', 'semester', 'file']
+        widgets = {
+            'school': forms.Select(attrs={'class': 'form-select'}),
+            'department': forms.Select(attrs={'class': 'form-select'}),
+            'semester': forms.Select(attrs={'class': 'form-select'}),
+            'file': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['department'].queryset = Department.objects.all().order_by('name')
+        self.fields['semester'].queryset = Semester.objects.all().order_by('name')

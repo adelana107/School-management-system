@@ -132,3 +132,32 @@
                 height: 60px;
             }
         }
+
+
+/* Screening Status Modal Styles */
+#screeningStatusModal .modal-header {
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+#screeningStatusModal .modal-content {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+}
+
+#screeningStatusModal .alert {
+    border-left: 4px solid transparent;
+    border-radius: 0.25rem;
+}
+
+#screeningStatusModal .alert-warning {
+    border-left-color: var(--warning);
+}
+
+#screeningStatusModal .alert-success {
+    border-left-color: var(--success);
+}
+
+#screeningStatusModal .alert-danger {
+    border-left-color: var(--danger);
+}        

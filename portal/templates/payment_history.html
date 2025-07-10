@@ -1,0 +1,467 @@
+{% load static %}
+
+{% block content %}
+{% include 'navbar.html' %}
+
+<style>
+    /* Modern Gradient Background */
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+        min-height: 100vh;
+    }
+
+    /* Card-style container with subtle shadow */
+    .payment-history-container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        margin-top: 2rem;
+        margin-bottom: 3rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+    }
+
+    /* Header with gradient */
+    .ph-header {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        border-radius: 16px 16px 0 0;
+    }
+
+    /* Search and filter controls */
+    .search-box {
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .search-box:focus-within {
+        transform: translateY(-2px);
+    }
+
+    .search-input {
+        padding-left: 2.5rem;
+        border-radius: 50px;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+    }
+
+    /* Table styling */
+    .table {
+        --bs-table-bg: transparent;
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        background: rgba(241, 243, 245, 0.8);
+        border-bottom-width: 2px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.8rem;
+        color: #495057;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s ease;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(241, 243, 245, 0.5);
+        transform: translateX(4px);
+    }
+
+    /* Status badges */
+    .badge {
+        padding: 0.5em 0.75em;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        border-radius: 50px;
+    }
+
+    /* Reference code styling */
+    .ref-code {
+        font-family: 'Roboto Mono', monospace;
+        background: rgba(0, 0, 0, 0.03);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+
+    /* Action buttons */
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+        transform: scale(1.1);
+    }
+
+    /* Empty state */
+    .empty-state {
+        padding: 3rem;
+        text-align: center;
+        opacity: 0.8;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #adb5bd;
+    }
+
+    /* Pagination */
+    .page-item.active .page-link {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        border-color: transparent;
+    }
+
+    .page-link {
+        border-radius: 50% !important;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 2px;
+        border: none;
+        color: #495057;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Modal styling */
+    .modal-content {
+        border-radius: 16px;
+        overflow: hidden;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        border-bottom: none;
+    }
+
+    .btn-close {
+        filter: invert(1);
+    }
+
+    /* Animation for table rows */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .table tbody tr {
+        animation: fadeIn 0.3s ease forwards;
+    }
+
+    .table tbody tr:nth-child(1) { animation-delay: 0.1s; }
+    .table tbody tr:nth-child(2) { animation-delay: 0.2s; }
+    .table tbody tr:nth-child(3) { animation-delay: 0.3s; }
+    /* ... and so on */
+</style>
+
+<div class="container py-4">
+    <div class="payment-history-container">
+        <div class="ph-header">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                <div>
+                    <h2 class="fw-bold mb-1">Payment History</h2>
+                    <p class="mb-0 opacity-75">View all your transaction records</p>
+                </div>
+                <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+                    <div class="search-box">
+                        <span class="search-icon"><i class="fas fa-search"></i></span>
+                        <input type="text" name="search" class="form-control search-input" placeholder="Search payments..." value="{{ request.GET.search }}">
+                    </div>
+                    <select name="year" class="form-select" style="width: 120px;">
+                        <option value="">All Years</option>
+                        {% for year in years %}
+                            <option value="{{ year.number }}" {% if year.number|stringformat:"s" == selected_year %}selected{% endif %}>Year {{ year.number }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-light">
+                        <i class="fas fa-filter me-1"></i> Filter
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="p-3 p-md-4">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>Reference</th>
+                            <th>Amount</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Year</th>
+                            <th style="width: 60px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in history %}
+                        <tr>
+                            <td class="text-muted">{{ forloop.counter }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="ref-code">{{ payment.reference|truncatechars:10 }}</span>
+                                    <button class="btn btn-sm btn-icon copy-btn" data-clipboard-text="{{ payment.reference }}" data-bs-toggle="tooltip" title="Copy reference">
+                                        <i class="far fa-copy"></i>
+                                    </button>
+                                </div>
+                            </td>
+                            <td class="fw-bold text-nowrap">₦{{ payment.amount_display|floatformat:2 }}</td>
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    <i class="fas fa-{% if payment.payment_type == 'School Fees' %}graduation-cap{% elif payment.payment_type == 'Acceptance Fee' %}check-circle{% else %}receipt{% endif %} me-1"></i>
+                                    {{ payment.payment_type }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge 
+                                    {% if payment.status == 'success' %}bg-success-light text-success
+                                    {% elif payment.status == 'pending' %}bg-warning-light text-warning
+                                    {% elif payment.status == 'failed' %}bg-danger-light text-danger
+                                    {% else %}bg-secondary{% endif %}">
+                                    <i class="fas fa-{% if payment.status == 'success' %}check-circle{% elif payment.status == 'pending' %}clock{% elif payment.status == 'failed' %}times-circle{% else %}info-circle{% endif %} me-1"></i>
+                                    {{ payment.status|title }}
+                                </span>
+                            </td>
+                            <td class="text-nowrap">
+                                <div class="d-flex flex-column">
+                                    <span>{{ payment.date_paid|date:"M j, Y" }}</span>
+                                    <small class="text-muted">{{ payment.date_paid|date:"h:i A" }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary-light text-primary">Year {{ payment.year.number }}</span>
+                            </td>
+                            <td>
+                                <button class="action-btn btn btn-sm btn-outline-primary details-btn" data-payment-id="{{ payment.id }}" data-bs-toggle="tooltip" title="View details">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="empty-state">
+                                    <i class="empty-icon far fa-file-alt"></i>
+                                    <h4 class="text-muted mb-2">No payment records found</h4>
+                                    <p class="text-muted mb-0">Your payment history will appear here once you make transactions</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if history %}
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 px-3">
+                <div class="mb-3 mb-md-0">
+                    <span class="text-muted">
+                        Showing <span class="fw-bold">{{ history.start_index }}</span>–<span class="fw-bold">{{ history.end_index }}</span> of <span class="fw-bold">{{ history.paginator.count }}</span> payments
+                    </span>
+                </div>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination mb-0">
+                        {% if history.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if selected_year %}&year={{ selected_year }}{% endif %}" aria-label="First">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ history.previous_page_number }}{% if selected_year %}&year={{ selected_year }}{% endif %}" aria-label="Previous">
+                                    <span aria-hidden="true">&lsaquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in history.paginator.page_range %}
+                            {% if history.number == num %}
+                                <li class="page-item active" aria-current="page">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > history.number|add:'-3' and num < history.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if selected_year %}&year={{ selected_year }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if history.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ history.next_page_number }}{% if selected_year %}&year={{ selected_year }}{% endif %}" aria-label="Next">
+                                    <span aria-hidden="true">&rsaquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ history.paginator.num_pages }}{% if selected_year %}&year={{ selected_year }}{% endif %}" aria-label="Last">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Payment Details Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title d-flex align-items-center gap-2">
+                    <i class="fas fa-receipt"></i>
+                    <span>Payment Details</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="paymentDetailsContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary receipt-btn d-none">
+                    <i class="fas fa-download me-2"></i>Download Receipt
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize clipboard.js
+    new ClipboardJS('.copy-btn');
+    
+    // Add feedback when copying
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            icon.classList.remove('fa-copy');
+            icon.classList.add('fa-check');
+            
+            // Show tooltip feedback
+            const tooltip = bootstrap.Tooltip.getInstance(this);
+            if (tooltip) {
+                tooltip.setContent({ '.tooltip-inner': 'Copied!' });
+                tooltip.show();
+                
+                setTimeout(() => {
+                    tooltip.setContent({ '.tooltip-inner': 'Copy reference' });
+                    icon.classList.remove('fa-check');
+                    icon.classList.add('fa-copy');
+                }, 2000);
+            }
+        });
+    });
+    
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Payment details modal
+    document.querySelectorAll('.details-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const paymentId = this.dataset.paymentId;
+            const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            const modalBody = document.getElementById('paymentDetailsContent');
+            const receiptBtn = document.querySelector('.receipt-btn');
+            
+            // Show loading state
+            modalBody.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            `;
+            
+            // Fetch payment details
+            fetch(`/payments/details/${paymentId}/`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.text();
+                })
+                .then(html => {
+                    modalBody.innerHTML = html;
+                    receiptBtn.classList.remove('d-none');
+                    receiptBtn.setAttribute('data-payment-id', paymentId);
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    modalBody.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Failed to load payment details. Please try again.
+                        </div>
+                    `;
+                    receiptBtn.classList.add('d-none');
+                    modal.show();
+                });
+        });
+    });
+    
+    // Receipt download handler
+    document.querySelector('.receipt-btn')?.addEventListener('click', function() {
+        const paymentId = this.getAttribute('data-payment-id');
+        window.open(`/payments/receipt/${paymentId}/`, '_blank');
+    });
+    
+    // Animate table rows on scroll
+    const animateOnScroll = () => {
+        const rows = document.querySelectorAll('.table tbody tr');
+        rows.forEach(row => {
+            const rowPosition = row.getBoundingClientRect().top;
+            const screenPosition = window.innerHeight / 1.3;
+            
+            if (rowPosition < screenPosition) {
+                row.style.opacity = '1';
+                row.style.transform = 'translateX(0)';
+            }
+        });
+    };
+    
+    window.addEventListener('scroll', animateOnScroll);
+    animateOnScroll(); // Initial check
+});
+</script>
+{% endblock %}

@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from portal.models import Application, School, Department, Student, Year, Semester, Headline, Notification, Course, Grade, Lga, State
+from portal.models import Application, School, Department, Student, Year, Semester, Headline, Notification, Course, Grade, Lga, State, Screening, AcademicSession
 from django.contrib.auth.decorators import user_passes_test,login_required
-from .forms import ApplicationForm, StudentForm, CrmLoginForm, HeadlineForm, NotificationForm, SchoolForm, DepartmentForm, CourseForm, GradeForm
-from django.db.models import Count
+from .forms import ApplicationForm, StudentForm, CrmLoginForm, HeadlineForm, NotificationForm, SchoolForm, DepartmentForm, CourseForm, GradeForm, TimeTableForm
+from django.db.models import Count, Q
 from django.db.models.expressions import RawSQL
 from datetime import datetime
 from django.contrib import messages
@@ -16,13 +16,38 @@ from django.views.decorators.http import require_GET
 from django.db.models.functions import ExtractMonth, ExtractYear
 from datetime import datetime, timedelta
 from django.views.decorators.http import require_POST
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
 import json
 from django.utils.timezone import now
+from django.conf import settings
+from django.urls import reverse
+from django.utils import timezone
 
 
 
-# Create your views here.
+
+
+
+
+
+
+def add_timetable(request):
+    
+    if request.method == "POST":
+        form = TimeTableForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Timetable added successfully.")
+            return redirect("timetable-success")  # Replace with your actual success URL
+    else:
+        form = TimeTableForm()
+
+    return render(request, "crm/add_time-table.html", {"form": form})
+
+def timetable_success(request):
+    return render(request, "crm/timetable_success.html")
+
+
 def Crmlogin(request):
     if request.method == "POST":
         form = CrmLoginForm(request.POST)
@@ -277,25 +302,199 @@ def search_applications(request):
 
 
 def applicant_list(request):
-    applications = Application.objects.all()
-    total_applications = Application.objects.count()
-    total_pending_application = Application.objects.filter(is_approved=False).count()
+    # Base queryset with optimization
+    applications = Application.objects.select_related(
+        'school', 'department', 'academic_session'
+    ).order_by('-created_at')
+    
+    # Filter parameters
+    filters = {
+        'status': request.GET.get('status', 'all'),
+        'session': request.GET.get('session', 'all'),
+        'school': request.GET.get('school', 'all'),
+        'department': request.GET.get('department', 'all'),
+        'date_from': request.GET.get('date_from'),
+        'date_to': request.GET.get('date_to'),
+        'search': request.GET.get('search', ''),
+        'view_mode': request.GET.get('view', 'grouped')  # New: grouped or list view
+    }
 
-    # Group applications by school and department
-    grouped_applications = {}
-    for app in applications:
-        school = app.school.name
-        department = app.department.name
+    # Apply filters
+    if filters['status'] == 'pending':
+        applications = applications.filter(is_approved=False)
+    elif filters['status'] == 'approved':
+        applications = applications.filter(is_approved=True)
+    
+    if filters['session'] != 'all':
+        applications = applications.filter(academic_session__name=filters['session'])
+    
+    if filters['school'] != 'all':
+        applications = applications.filter(school__name=filters['school'])
+    
+    if filters['department'] != 'all':
+        applications = applications.filter(department__name=filters['department'])
+    
+    if filters['date_from']:
+        applications = applications.filter(created_at__gte=filters['date_from'])
+    
+    if filters['date_to']:
+        applications = applications.filter(created_at__lte=filters['date_to'])
+    
+    if filters['search']:
+        applications = applications.filter(
+            Q(surname__icontains=filters['search']) |
+            Q(first_name__icontains=filters['search']) |
+            Q(email__icontains=filters['search']) |
+            Q(phone_number__icontains=filters['search']) |
+            Q(application_number__icontains=filters['search'])
+        )
 
-        if school not in grouped_applications:
-            grouped_applications[school] = {}
-        if department not in grouped_applications[school]:  # Fixed variable case
-            grouped_applications[school][department] = []
+    # Get distinct values for filters
+    filter_options = {
+        'academic_sessions': Application.objects.values_list(
+            'academic_session__name', flat=True
+        ).distinct().order_by('academic_session__name'),
+        'schools': Application.objects.values_list(
+            'school__name', flat=True
+        ).distinct().order_by('school__name'),
+        'departments': Application.objects.values_list(
+            'department__name', flat=True
+        ).distinct().order_by('department__name')
+    }
 
-        grouped_applications[school][department].append(app)
+    # Pagination
+    paginator = Paginator(applications, 50)  # Increased per page count
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
-    return render(request, "crm/applicant_list.html", {"grouped_applications": grouped_applications, 'total_pending_application': total_pending_application, 'total_applications': total_applications})
+    # Prepare data based on view mode
+    if filters['view_mode'] == 'grouped':
+        # Grouped view data preparation
+        grouped_data = {}
+        for app in page_obj.object_list:
+            session = app.academic_session.name
+            school = app.school.name
+            department = app.department.name
 
+            grouped_data.setdefault(session, {}).setdefault(school, {}).setdefault(department, []).append(app)
+        
+        display_data = {'grouped_applications': grouped_data}
+    else:
+        # Flat list view data preparation
+        display_data = {'applications_list': page_obj.object_list}
+
+    # Stats and counts
+    stats = {
+        'total_applications': Application.objects.count(),
+        'approved_applicants': Application.objects.filter(is_approved=True).count(),
+        'pending_applicants': Application.objects.filter(is_approved=False).count(),
+        'filtered_count': applications.count()
+    }
+
+    return render(request, "crm/applicant_list.html", {
+        **display_data,
+        **filter_options,
+        **stats,
+        'page_obj': page_obj,
+        'current_filters': filters
+    })
+
+
+def screening_list(request):
+    screenings = Screening.objects.select_related('student').order_by('-id')
+    
+    # Get filter parameters
+    school_filter = request.GET.get('school')
+    department_filter = request.GET.get('department')
+    
+    # Apply filters if provided
+    if school_filter:
+        screenings = screenings.filter(student__school=school_filter)
+    if department_filter:
+        screenings = screenings.filter(student__department=department_filter)
+    
+    # Get unique schools and departments
+    schools = Student.objects.values_list('school', flat=True).distinct().order_by('school')
+    departments = Student.objects.values_list('department', flat=True).distinct().order_by('department')
+    
+    # If school is selected, filter departments for that school
+    if school_filter:
+        departments = Student.objects.filter(school=school_filter)\
+                                    .values_list('department', flat=True)\
+                                    .distinct()\
+                                    .order_by('department')
+    
+    # Group by school and department
+    grouped_screenings = {}
+    for screening in screenings:
+        school = screening.student.school
+        department = screening.student.department
+        
+        if school not in grouped_screenings:
+            grouped_screenings[school] = {}
+            
+        if department not in grouped_screenings[school]:
+            grouped_screenings[school][department] = []
+            
+        grouped_screenings[school][department].append(screening)
+    
+    context = {
+        'grouped_screenings': grouped_screenings,
+        'schools': schools,
+        'departments': departments,
+        'selected_school': school_filter,
+        'selected_department': department_filter,
+        'total_students': screenings.count(),
+    }
+    return render(request, 'crm/screening_list.html', context)
+
+
+
+
+@login_required
+def screening_detail(request, screening_id):
+    screening = get_object_or_404(Screening, id=screening_id)
+    context = {'screening': screening}
+    return render(request, 'crm/screening_detail.html', context)
+
+
+
+
+
+
+
+@login_required
+def process_screening(request, pk):  # Changed parameter to 'pk'
+    screening = get_object_or_404(Screening, pk=pk)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        review_notes = request.POST.get('review_notes', '')
+        
+        if action == 'approve':
+            screening.status = 'approved'
+            screening.review_notes = review_notes
+            screening.reviewed_by = request.user
+            screening.save()
+            messages.success(request, f'Screening for {screening.student} has been approved.')
+            
+        elif action == 'decline':
+            screening.status = 'declined'
+            screening.review_notes = review_notes
+            screening.reviewed_by = request.user
+            screening.save()
+            messages.warning(request, f'Screening for {screening.student} has been declined.')
+            
+        elif action == 'reset':
+            screening.status = 'pending'
+            screening.review_notes = review_notes
+            screening.reviewed_by = None
+            screening.save()
+            messages.info(request, f'Screening for {screening.student} has been reset to pending.')
+            
+        return redirect('screening_detail', screening_id=screening.id)
+
+    return redirect('screening_list')
 
 def pending_list(request):
     pending_applications = Application.objects.filter(is_approved=False)
@@ -309,13 +508,19 @@ def pending_list(request):
 
         if school not in grouped_applications:
             grouped_applications[school] = {}
-        if department not in grouped_applications[school]:  # Fixed variable case
+        if department not in grouped_applications[school]:
             grouped_applications[school][department] = []
 
         grouped_applications[school][department].append(app)
 
-    return render(request, "crm/pending_list.html", {"grouped_applications": grouped_applications, 'total_pending_application':total_pending_application, 'total_applications': total_applications})
+    return render(request, "crm/pending_list.html", {
+        "grouped_applications": grouped_applications,
+        'total_pending_application': total_pending_application,
+        'total_applications': total_applications
+    })
 
+
+    
 def get_departments(request):
     school_id = request.GET.get('school_id')
     if school_id:
@@ -478,6 +683,7 @@ def move_to_new_semester(request):
         current_year = student.year
         current_semester = student.semester
 
+        # Get both semesters for the current year
         first_semester = Semester.objects.filter(name="First", year=current_year).first()
         second_semester = Semester.objects.filter(name="Second", year=current_year).first()
 
@@ -485,21 +691,33 @@ def move_to_new_semester(request):
             messages.error(request, f"Error: Year {current_year} does not have both semesters!")
             return redirect("dashboard")
 
+        # CASE 1: Student is in First Semester → move to Second
         if current_semester and current_semester.id == first_semester.id:
             student.semester = second_semester
-        else:
-            next_year = Year.objects.filter(number=current_year.number + 1).first()
-            if next_year:
-                next_first_semester = Semester.objects.filter(name="First", year=next_year).first()
-                if next_first_semester:
-                    student.year = next_year
-                    student.semester = next_first_semester
-                else:
-                    messages.error(request, f"Error: First semester not found for next year ({next_year})")
-                    return redirect("dashboard")
-            else:
+
+        # CASE 2: Student is in Second Semester
+        elif current_semester and current_semester.id == second_semester.id:
+            if current_year.number == 4:
+                # Graduate the student
                 student.year = graduated_year
-                # Optional: student.semester = None
+                student.semester = None  # Optional: Remove semester
+            else:
+                # Promote to next academic year, first semester
+                next_year = Year.objects.filter(number=current_year.number + 1).first()
+                if next_year:
+                    next_first_semester = Semester.objects.filter(name="First", year=next_year).first()
+                    if next_first_semester:
+                        student.year = next_year
+                        student.semester = next_first_semester
+                        student.has_paid_school_fees = False
+                    else:
+                        messages.error(request, f"Error: First semester not found for Year {next_year.number}")
+                        return redirect("dashboard")
+
+        # CASE 3: No valid semester
+        else:
+            messages.warning(request, f"{student} has no valid semester assigned.")
+            continue
 
         student.save()
 

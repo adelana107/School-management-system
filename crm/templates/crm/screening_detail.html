@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Screening Review - {{ screening.student }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --success-color: #1cc88a;
+            --danger-color: #e74a3b;
+            --warning-color: #f6c23e;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f8f9fc;
+        }
+
+        .student-header {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        }
+
+        .student-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .document-card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .document-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .document-preview {
+            max-height: 400px;
+            object-fit: contain;
+            border: 1px solid #eee;
+            border-radius: 0.25rem;
+        }
+
+        .status-badge {
+            padding: 0.5em 1em;
+            font-weight: 600;
+            border-radius: 0.25rem;
+        }
+
+        .badge-pending {
+            background-color: rgba(246, 194, 62, 0.2);
+            color: #856404;
+        }
+
+        .badge-approved {
+            background-color: rgba(28, 200, 138, 0.2);
+            color: #155724;
+        }
+
+        .badge-declined {
+            background-color: rgba(231, 74, 59, 0.2);
+            color: #721c24;
+        }
+
+        .action-btn {
+            min-width: 120px;
+            font-weight: 600;
+        }
+
+        .notes-textarea {
+            min-height: 150px;
+        }
+
+        .verification-steps {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .verification-steps::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e9ecef;
+        }
+
+        .step {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-number {
+            position: absolute;
+            left: -30px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .step.active .step-number {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: var(--success-color);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    {% include 'crm/sidebar.html' %}
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <a href="{% url 'screening_list' %}" class="btn btn-outline-secondary mb-3">
+                    <i class="fas fa-arrow-left me-2"></i> Back to Screening List
+                </a>
+
+                <div class="student-header p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 text-center">
+                            {% if screening.student.profile_picture %}
+                                <img src="{{ screening.student.profile_picture.url }}" class="student-avatar mb-3" />
+                            {% else %}
+                                <img src="{% static 'images/default-avatar.png' %}" class="student-avatar mb-3" />
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h3>{{ screening.student.surname }} {{ screening.student.first_name }}</h3>
+                            <p class="mb-1"><strong>Application No.:</strong> {{ screening.student.application_number }}</p>
+                            <p class="mb-1"><strong>Email:</strong> {{ screening.student.email }}</p>
+                            <p class="mb-1"><strong>Phone:</strong> {{ screening.student.phone_number }}</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <span class="status-badge
+                                {% if screening.status == 'approved' %}badge-approved
+                                {% elif screening.status == 'declined' %}badge-declined
+                                {% else %}badge-pending
+                                {% endif %}">
+                                <i class="fas
+                                    {% if screening.status == 'approved' %}fa-check-circle
+                                    {% elif screening.status == 'declined' %}fa-times-circle
+                                    {% else %}fa-clock
+                                    {% endif %} me-1"></i>
+                                {{ screening.status|title }}
+                            </span>
+                            {% if screening.reviewed_at %}
+                                <p class="text-muted mt-2 mb-0">
+                                    <small>Reviewed on {{ screening.reviewed_at|date:"M d, Y" }}</small>
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <!-- Documents Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4 class="mb-3"><i class="fas fa-file-alt me-2"></i>Documents</h4>
+                    </div>
+
+                    <!-- SSCE Result -->
+                    <div class="col-md-6 mb-4">
+                        <div class="document-card p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-certificate text-primary me-2"></i>SSCE Result
+                                </h5>
+                                {% if screening.ssce_result %}
+                                    <span class="badge bg-success">Submitted</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Missing</span>
+                                {% endif %}
+                            </div>
+
+                            {% if screening.ssce_result %}
+                                <div class="text-center mb-3">
+                                    <img src="{{ screening.ssce_result.url }}" class="document-preview img-fluid mb-2" />
+                                    <div>
+                                        <a href="{{ screening.ssce_result.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-download me-1"></i> Download
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="zoomDocument('ssce')">
+                                            <i class="fas fa-search-plus me-1"></i> Zoom
+                                        </button>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    No SSCE result uploaded by student
+                                </div>
+                            {% endif %}
+
+                            <div class="form-group">
+                                <label for="ssce-notes" class="form-label">Verification Notes:</label>
+                                <textarea class="form-control" id="ssce-notes" rows="2"
+                                    placeholder="Add notes about SSCE verification..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- JAMB Result -->
+                    <div class="col-md-6 mb-4">
+                        <div class="document-card p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-file-certificate text-warning me-2"></i>JAMB Result
+                                </h5>
+                                {% if screening.jamb_result %}
+                                    <span class="badge bg-success">Submitted</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Missing</span>
+                                {% endif %}
+                            </div>
+
+                            {% if screening.jamb_result %}
+                                <div class="text-center mb-3">
+                                    <img src="{{ screening.jamb_result.url }}" class="document-preview img-fluid mb-2" />
+                                    <div>
+                                        <a href="{{ screening.jamb_result.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-download me-1"></i> Download
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="zoomDocument('jamb')">
+                                            <i class="fas fa-search-plus me-1"></i> Zoom
+                                        </button>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    No JAMB result uploaded by student
+                                </div>
+                            {% endif %}
+
+                            <div class="form-group">
+                                <label for="jamb-notes" class="form-label">Verification Notes:</label>
+                                <textarea class="form-control" id="jamb-notes" rows="2"
+                                    placeholder="Add notes about JAMB verification..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <!-- Verification Steps -->
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Verification Steps</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="verification-steps">
+                            <div class="step {% if screening.ssce_result %}completed{% else %}active{% endif %}">
+                                <span class="step-number">1</span>
+                                <h6>SSCE Result Verification</h6>
+                                <p class="text-muted small">Verify the authenticity of SSCE results</p>
+                            </div>
+
+                            <div class="step {% if screening.jamb_result %}completed{% else %}active{% endif %}">
+                                <span class="step-number">2</span>
+                                <h6>JAMB Result Verification</h6>
+                                <p class="text-muted small">Confirm JAMB score and details</p>
+                            </div>
+
+                            <div class="step active">
+                                <span class="step-number">3</span>
+                                <h6>Final Review</h6>
+                                <p class="text-muted small">Complete screening process</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Screening Decision -->
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Screening Decision</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'process_screening' screening.id %}">
+                            {% csrf_token %}
+
+                            <div class="mb-3">
+                                <label for="review-notes" class="form-label">Review Notes:</label>
+                                <textarea class="form-control notes-textarea" id="review-notes" name="review_notes"
+                                    placeholder="Enter detailed review notes...">{% if screening.review_notes %}{{ screening.review_notes }}{% endif %}</textarea>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                {% if screening.status != 'approved' %}
+                                <button type="submit" name="action" value="approve" class="btn btn-success action-btn">
+                                    <i class="fas fa-check-circle me-2"></i> Approve Screening
+                                </button>
+                                {% endif %}
+
+                                {% if screening.status != 'declined' %}
+                                <button type="button" class="btn btn-danger action-btn" data-bs-toggle="modal" data-bs-target="#declineModal">
+                                    <i class="fas fa-times-circle me-2"></i> Decline Screening
+                                </button>
+                                {% endif %}
+
+                                {% if screening.status != 'pending' %}
+                                <button type="submit" name="action" value="reset" class="btn btn-warning action-btn">
+                                    <i class="fas fa-undo me-2"></i> Reset to Pending
+                                </button>
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Decline Modal -->
+    <div class="modal fade" id="declineModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" action="{% url 'process_screening' screening.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Decline</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            You are about to decline this screening application. Please provide a reason below.
+                        </div>
+                        <div class="mb-3">
+                            <label for="decline-reason" class="form-label">Reason for Decline:</label>
+                            <textarea class="form-control" id="decline-reason" name="review_notes" rows="4" required
+                                placeholder="Provide detailed reason for declining this application..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-2"></i> Cancel
+                        </button>
+                        <button type="submit" name="action" value="decline" class="btn btn-danger">
+                            <i class="fas fa-ban me-2"></i> Confirm Decline
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Zoom Modal -->
+    <div class="modal fade" id="documentZoomModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="zoomModalTitle">Document Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="zoomedDocument" src="" class="img-fluid" style="max-height: 80vh;" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i> Close
+                    </button>
+                    <a id="downloadDocument" href="#" class="btn btn-primary">
+                        <i class="fas fa-download me-2"></i> Download
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const hasSSCEResult = {% if screening.ssce_result %}true{% else %}false{% endif %};
+        const hasJAMBResult = {% if screening.jamb_result %}true{% else %}false{% endif %};
+
+        const ssceResultUrl = "{% if screening.ssce_result %}{{ screening.ssce_result.url }}{% else %}#{% endif %}";
+        const jambResultUrl = "{% if screening.jamb_result %}{{ screening.jamb_result.url }}{% else %}#{% endif %}";
+
+        function zoomDocument(type) {
+            const modal = new bootstrap.Modal(document.getElementById('documentZoomModal'));
+            const title = document.getElementById('zoomModalTitle');
+            const img = document.getElementById('zoomedDocument');
+            const downloadLink = document.getElementById('downloadDocument');
+
+            if (type === 'ssce') {
+                title.textContent = 'SSCE Result - {{ screening.student }}';
+                if (hasSSCEResult) {
+                    img.src = ssceResultUrl;
+                    downloadLink.href = ssceResultUrl;
+                } else {
+                    alert('No SSCE Result file uploaded.');
+                    return;
+                }
+            } else if (type === 'jamb') {
+                title.textContent = 'JAMB Result - {{ screening.student }}';
+                if (hasJAMBResult) {
+                    img.src = jambResultUrl;
+                    downloadLink.href = jambResultUrl;
+                } else {
+                    alert('No JAMB Result file uploaded.');
+                    return;
+                }
+            }
+
+            modal.show();
+        }
+
+        // Initialize tooltips
+        document.addEventListener('DOMContentLoaded', function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+</body>
+</html>

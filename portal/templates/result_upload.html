@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Screening</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #6b8cbe;
+            --accent-color: #ff7e5f;
+            --light-gray: #f5f7fa;
+            --dark-gray: #333;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-gray);
+            color: var(--dark-gray);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 30px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .file-upload-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .file-upload-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark-gray);
+        }
+
+        .file-upload-input {
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            position: absolute;
+            z-index: -1;
+        }
+
+        .file-upload-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px 20px;
+            background-color: var(--light-gray);
+            border: 2px dashed #ccc;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 100px;
+        }
+
+        .file-upload-button:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(74, 111, 165, 0.05);
+        }
+
+        .file-upload-icon {
+            font-size: 24px;
+            color: var(--primary-color);
+            margin-right: 10px;
+        }
+
+        .file-upload-text {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .file-upload-text span {
+            font-size: 14px;
+            color: var(--dark-gray);
+        }
+
+        .file-upload-text strong {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .file-name {
+            margin-top: 10px;
+            font-size: 14px;
+            color: var(--primary-color);
+            font-weight: 500;
+            display: none;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .submit-btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 20px auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Document Screening</h1>
+        <form id="screeningForm" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <div class="file-upload-wrapper">
+                    <label class="file-upload-label">Upload SSCE Result</label>
+                    <input type="file" name="ssce_result" id="ssce_result" class="file-upload-input" required>
+                    <label for="ssce_result" class="file-upload-button">
+                        <div class="file-upload-text">
+                            <svg class="file-upload-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M7 10V9C7 6.23858 9.23858 4 12 4C14.7614 4 17 6.23858 17 9V10H19C20.1046 10 21 10.8954 21 12V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V12C3 10.8954 3.89543 10 5 10H7ZM19 12H5V20H19V12ZM9 10H15V9C15 7.34315 13.6569 6 12 6C10.3431 6 9 7.34315 9 9V10Z" fill="#4a6fa5"/>
+                            </svg>
+                            <span>Click to upload or drag and drop</span>
+                            <strong>SSCE Result (PDF, JPG, PNG)</strong>
+                        </div>
+                    </label>
+                    <div id="ssceFileName" class="file-name"></div>
+                    <div id="ssceError" class="error-message">Please upload your SSCE result</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="file-upload-wrapper">
+                    <label class="file-upload-label">Upload JAMB Result</label>
+                    <input type="file" name="jamb_result" id="jamb_result" class="file-upload-input" required>
+                    <label for="jamb_result" class="file-upload-button">
+                        <div class="file-upload-text">
+                            <svg class="file-upload-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M7 10V9C7 6.23858 9.23858 4 12 4C14.7614 4 17 6.23858 17 9V10H19C20.1046 10 21 10.8954 21 12V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V12C3 10.8954 3.89543 10 5 10H7ZM19 12H5V20H19V12ZM9 10H15V9C15 7.34315 13.6569 6 12 6C10.3431 6 9 7.34315 9 9V10Z" fill="#4a6fa5"/>
+                            </svg>
+                            <span>Click to upload or drag and drop</span>
+                            <strong>JAMB Result (PDF, JPG, PNG)</strong>
+                        </div>
+                    </label>
+                    <div id="jambFileName" class="file-name"></div>
+                    <div id="jambError" class="error-message">Please upload your JAMB result</div>
+                </div>
+            </div>
+            
+            <button type="submit" class="submit-btn">Submit Documents</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle file selection display for SSCE
+            const ssceInput = document.getElementById('ssce_result');
+            const ssceFileName = document.getElementById('ssceFileName');
+            const ssceError = document.getElementById('ssceError');
+            
+            ssceInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    ssceFileName.textContent = this.files[0].name;
+                    ssceFileName.style.display = 'block';
+                    ssceError.style.display = 'none';
+                } else {
+                    ssceFileName.style.display = 'none';
+                }
+            });
+            
+            // Handle file selection display for JAMB
+            const jambInput = document.getElementById('jamb_result');
+            const jambFileName = document.getElementById('jambFileName');
+            const jambError = document.getElementById('jambError');
+            
+            jambInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    jambFileName.textContent = this.files[0].name;
+                    jambFileName.style.display = 'block';
+                    jambError.style.display = 'none';
+                } else {
+                    jambFileName.style.display = 'none';
+                }
+            });
+            
+            // Form validation
+            const form = document.getElementById('screeningForm');
+            form.addEventListener('submit', function(e) {
+                let isValid = true;
+                
+                if (!ssceInput.files.length) {
+                    ssceError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                if (!jambInput.files.length) {
+                    jambError.style.display = 'block';
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
+            
+            // Drag and drop functionality
+            const uploadAreas = document.querySelectorAll('.file-upload-button');
+            
+            uploadAreas.forEach(area => {
+                area.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    area.style.borderColor = '#4a6fa5';
+                    area.style.backgroundColor = 'rgba(74, 111, 165, 0.1)';
+                });
+                
+                area.addEventListener('dragleave', () => {
+                    area.style.borderColor = '#ccc';
+                    area.style.backgroundColor = '#f5f7fa';
+                });
+                
+                area.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    area.style.borderColor = '#ccc';
+                    area.style.backgroundColor = '#f5f7fa';
+                    
+                    const input = area.previousElementSibling;
+                    if (input && input.classList.contains('file-upload-input')) {
+                        input.files = e.dataTransfer.files;
+                        const event = new Event('change');
+                        input.dispatchEvent(event);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

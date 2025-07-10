@@ -51,11 +51,18 @@ urlpatterns = [
     path('payment_verify/', views.payment_verify, name='payment_verify'),
     path('application-success/<str:application_number>/<str:surname>/', views.application_success, name='application_success'),
 
-    #school-fees payment
+    #Payment Management
     path('pay_school_fees/', views.pay_school_fees, name='pay_school_fees'),
     path('verify_school_fees/', views.school_fees_verify_payment, name='school_fees_verify_payment'),
+    path('payment-history/', views.payment_history, name='payment_history'),
+
+    path('pay_acceptance_fees/', views.pay_acceptance_fees, name='pay_acceptance_fees'),
+    path('verify_acceptance_fees/', views.acceptance_fees_verify_payment, name='acceptance_fees_verify_payment'),
 
     path('api/online-status/', views.online_status, name='online-status'),
+
+    #result verification
+    path('result-verification/', views.result_upload, name='result_upload'),
 
 
 

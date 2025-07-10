@@ -5,8 +5,7 @@ from .views import (
     Crmlogin, view_student, move_to_new_semester, move_to_previous_semester, move_semester_confirmationPage,
     semester_success, reverse_semester_confirmationPage, semester_reverse_success, Post_headline, Edit_headline, delete_headline,
     school_view, Notify_student, add_School, department_view, add_department, course_view, add_course,  load_departments, load_courses, add_grade, grade_list,
-    edit_grade, get_departments, get_lgas, chart_data, update_application_status, search_applications, pending_list
-)
+    edit_grade, get_departments, get_lgas, chart_data, update_application_status, search_applications, pending_list, add_timetable,  timetable_success, screening_list, screening_detail, process_screening)
 
 urlpatterns = [
     # Applicant URLs
@@ -81,4 +80,15 @@ urlpatterns = [
     #pending list
 
     path('pending/', pending_list, name='pending_list'),
+
+    #timetable management
+    path('add-timetable/', add_timetable, name='add_timetable'),
+    path("timetable-success/", timetable_success, name="timetable-success"),
+
+    # Screening URLs
+    path('screenings/', screening_list, name='screening_list'),
+    path('screenings/<int:screening_id>/', screening_detail, name='screening_detail'),
+    path('screening/<int:pk>/process/', process_screening, name='process_screening'),
+    
+   
 ]

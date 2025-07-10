@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import ApplicationForm, StudentLoginForm
-from .models import Application, Department, State, Lga, Student, Course, Year, RegisteredCourse, Headline, Category, Notification, TimeTable   # Ensure you import your model
+from .forms import ApplicationForm, StudentLoginForm, ScreeningForm
+from .models import Application, Department, State, Lga, Student, Course, Year, RegisteredCourse, Headline, Category, Notification, TimeTable, PaymentHistory, Screening, School, Semester, AcademicSession  # Ensure you import your model
 from django.http import JsonResponse
 import json
 from django.contrib.auth import authenticate, login, logout
@@ -19,8 +19,129 @@ import requests
 from django.core.files.base import ContentFile
 from django.http import QueryDict
 import base64
+from datetime import datetime
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import User
 
 # Create your views here.
+
+
+@login_required
+def pay_acceptance_fees(request):
+    student = get_object_or_404(Student, application_number=request.user.username)
+
+    if student.has_paid_acceptance_fee:
+        messages.info(request, "You have already paid your acceptance fees.")
+        return redirect('portal')
+
+    payment_reference = str(uuid.uuid4())
+    request.session['acceptance_fees_payment_reference'] = payment_reference
+    request.session['acceptance_fees_amount'] = 100000  # in kobo
+
+    amount_in_naira = 1000.00
+    amount_in_kobo = 100000
+
+    # ✅ Combine full name
+    student_name = f"{student.surname} {student.first_name} {student.other_name or ''}".strip()
+
+    context = {
+        'paystack_public_key': settings.PAYSTACK_PUBLIC_KEY,
+        'email': student.email,
+        'amount': amount_in_kobo,
+        'amount_display': amount_in_naira,
+        'reference': payment_reference,
+        'callback_url': request.build_absolute_uri(reverse('acceptance_fees_verify_payment')),
+        'student_name': student_name,  # ✅ Include this
+    }
+
+    return render(request, 'paystack_acceptance_fees.html', context)
+
+
+
+
+@login_required
+def acceptance_fees_verify_payment(request):
+    reference = request.GET.get('reference')
+    session_ref = request.session.get('acceptance_fees_payment_reference')
+    expected_amount = request.session.get('acceptance_fees_amount')
+
+    if reference != session_ref:
+        messages.error(request, "Invalid payment reference.")
+        return redirect('portal')
+
+    url = f'https://api.paystack.co/transaction/verify/{reference}'
+    headers = {
+        'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
+    }
+    response = requests.get(url, headers=headers)
+    res_data = response.json()
+
+    if res_data['status'] and res_data['data']['status'] == 'success':
+        paid_amount = res_data['data']['amount']
+        
+        if paid_amount != expected_amount:
+            messages.error(request, f"Payment amount mismatch. Expected {expected_amount/100}, got {paid_amount/100}")
+            return redirect('portal')
+
+        student = get_object_or_404(Student, application_number=request.user.username)
+
+        student.has_paid_acceptance_fee = True
+        student.save()
+
+        PaymentHistory.objects.create(
+            student=student,
+            reference=reference,
+            amount=paid_amount,
+            status='success',
+            payment_type='Acceptance Fees',
+            semester=student.semester,
+            year=student.year
+        )
+
+        del request.session['acceptance_fees_payment_reference']
+        del request.session['acceptance_fees_amount']
+
+        messages.success(request, "Acceptance fees payment successful!")
+        return redirect('portal')
+
+    messages.error(request, "Payment verification failed.")
+    return redirect('portal')
+
+
+
+
+def result_upload(request):
+    student = get_object_or_404(Student, application_number=request.user.username)
+    screening, created = Screening.objects.get_or_create(student=student)
+
+    # Allow upload only if new or previously declined/pending
+    if screening.status == 'approved':
+        messages.warning(request, "Your screening has already been approved. You cannot upload new documents.")
+        return redirect('portal')  # Or any view you want
+
+    if request.method == "POST":
+        form = ScreeningForm(request.POST, request.FILES)
+        if form.is_valid():
+            ssce_result = form.cleaned_data.get('ssce_result')
+            jamb_result = form.cleaned_data.get('jamb_result')
+
+            if ssce_result:
+                screening.ssce_result.save(ssce_result.name, ContentFile(ssce_result.read()))
+            if jamb_result:
+                screening.jamb_result.save(jamb_result.name, ContentFile(jamb_result.read()))
+
+            screening.status = 'pending'  # Reset to pending on new upload
+            screening.reviewed_by = None  # Clear reviewer
+            screening.review_notes = ''   # Optional: clear previous notes
+            screening.save()
+
+            messages.success(request, "Documents uploaded successfully. Awaiting screening decision.")
+            return redirect('portal')
+    else:
+        form = ScreeningForm()
+
+    return render(request, 'result_upload.html', {'form': form, 'student': student})
+
 
 
 
@@ -43,6 +164,8 @@ def pay_school_fees(request):
     amount_in_naira = 1000.00
     amount_in_kobo = 100000
 
+    student_name = f"{student.surname} {student.first_name} {student.other_name or ''}".strip()
+
     context = {
         'paystack_public_key': settings.PAYSTACK_PUBLIC_KEY,
         'email': student.email,
@@ -50,6 +173,7 @@ def pay_school_fees(request):
         'amount_display': amount_in_naira,  # For display purposes
         'reference': payment_reference,
         'callback_url': request.build_absolute_uri(reverse('school_fees_verify_payment')),
+        'student_name': student_name,
     }
 
     return render(request, 'paystack_school_fees.html', context)
@@ -58,7 +182,7 @@ def pay_school_fees(request):
 def school_fees_verify_payment(request):
     reference = request.GET.get('reference')
     session_ref = request.session.get('school_fees_payment_reference')
-    expected_amount = request.session.get('school_fees_amount')  # Get amount in kobo from session
+    expected_amount = request.session.get('school_fees_amount')  # Amount in kobo
 
     if reference != session_ref:
         messages.error(request, "Invalid payment reference.")
@@ -72,22 +196,31 @@ def school_fees_verify_payment(request):
     res_data = response.json()
 
     if res_data['status'] and res_data['data']['status'] == 'success':
-        # Verify the amount matches what we expected
         paid_amount = res_data['data']['amount']
-        
+
         if paid_amount != expected_amount:
             messages.error(request, f"Payment amount mismatch. Expected {expected_amount/100}, got {paid_amount/100}")
             return redirect('portal')
 
         student = get_object_or_404(Student, application_number=request.user.username)
 
-        # Mark student as having paid school fees
+        # ✅ Save payment record (without semester)
+        PaymentHistory.objects.create(
+            student=student,
+            reference=reference,
+            amount=paid_amount,
+            status='success',
+            payment_type='School Fees',
+            year=student.year,  # ✅ Include academic year only
+        )
+
+        # ✅ Update student status
         student.has_paid_school_fees = True
         student.save()
 
-        # Clear session variables
-        del request.session['school_fees_payment_reference']
-        del request.session['school_fees_amount']
+        # ✅ Clear session data
+        request.session.pop('school_fees_payment_reference', None)
+        request.session.pop('school_fees_amount', None)
 
         messages.success(request, "School fees payment successful! Matric number will be generated.")
         return redirect('portal')
@@ -96,57 +229,61 @@ def school_fees_verify_payment(request):
     return redirect('portal')
 
 
-
 def payment_verify(request):
     reference = request.GET.get('reference')
-    session_ref = request.session.get('payment_reference')
+    session_data = request.session.get('application_form_data')
 
-    if reference != session_ref:
-        messages.error(request, "Invalid payment reference.")
+    if not session_data:
+        messages.error(request, "Session expired or invalid. Please refill the form.")
         return redirect('application_create')
 
-    # Verify with Paystack
-    url = f'https://api.paystack.co/transaction/verify/{reference}'
-    headers = {
-        'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
-    }
-    response = requests.get(url, headers=headers)
-    res_data = response.json()
-
-    if res_data['status'] and res_data['data']['status'] == 'success':
-        form_data = request.session.get('application_form_data')
-        file_bytes = request.session.get('profile_picture_content')
-        file_name = request.session.get('profile_picture_name')
-
-        if not form_data:
-            messages.error(request, "Session expired. Please fill the form again.")
-            return redirect('application_create')
-
-        form = ApplicationForm(QueryDict('', mutable=True).update(form_data) or form_data)
-
-        if form.is_valid():
-            application = form.save(commit=False)
-
-            if file_bytes and file_name:
-                application.profile_picture.save(file_name, ContentFile(base64.b64decode(file_bytes)))
-
-            application.save()
-
-            # Clear session
-            for key in ['application_form_data', 'payment_reference', 'profile_picture_content', 'profile_picture_name']:
-                request.session.pop(key, None)
-
-            messages.success(request, f"Payment successful! Application Number: {application.application_number}")
-            return redirect('application_success', application_number=application.application_number, surname=application.surname)
-
-        messages.error(request, "Form invalid after payment.")
+    try:
+        # Get default Year 1 and First Semester
+        year = Year.objects.get(number=1)
+        semester = Semester.objects.get(name="First", year=year)
+    except Year.DoesNotExist:
+        messages.error(request, "Default Year 1 not found. Please set it up in the admin panel.")
+        return redirect('application_create')
+    except Semester.DoesNotExist:
+        messages.error(request, "First Semester for Year 1 not found. Please set it up in the admin panel.")
         return redirect('application_create')
 
-    messages.error(request, "Payment verification failed. Please try again.")
-    return redirect('application_create')
+    try:
+        application = Application(
+            surname=session_data['surname'],
+            first_name=session_data['first_name'],
+            other_name=session_data.get('other_name'),
+            email=session_data['email'],
+            phone_number=session_data['phone_number'],
+            address=session_data['address'],
+            state_of_origin_id=session_data['state_of_origin'],
+            local_government_id=session_data['local_government'],
+            date_of_birth=session_data['date_of_birth'],
+            school_id=session_data['school'],
+            department_id=session_data['department'],
+            academic_session_id=session_data['academic_session'],
+            year=year,
+            semester=semester
+        )
 
+        # Handle profile picture from session
+        profile_picture_content = request.session.get('profile_picture_content')
+        profile_picture_name = request.session.get('profile_picture_name')
+        if profile_picture_content and profile_picture_name:
+            from django.core.files.base import ContentFile
+            import base64
+            decoded_image = base64.b64decode(profile_picture_content)
+            application.profile_picture.save(profile_picture_name, ContentFile(decoded_image), save=False)
 
+        # Save application (this will also generate application number and user)
+        application.save()
 
+        messages.success(request, "Payment verified and application submitted successfully.")
+        return redirect('application_success', application_number=application.application_number, surname=application.surname)
+
+    except Exception as e:
+        messages.error(request, f"An error occurred while saving your application: {str(e)}")
+        return redirect('application_create')
 
 def paystack_payment(request):
     form_data = request.session.get('application_form_data')
@@ -163,6 +300,40 @@ def paystack_payment(request):
         'callback_url': request.build_absolute_uri('/payment_verify/'),
     }
     return render(request, 'paystack_payment.html', context)
+
+
+@login_required
+def payment_history(request):
+    student = get_object_or_404(Student, application_number=request.user.username)
+    history = student.payment_histories.all()
+
+    selected_year = request.GET.get("year")
+    selected_semester = request.GET.get("semester")
+
+    if selected_year:
+        try:
+            year = Year.objects.get(number=selected_year)
+            history = history.filter(year=year)
+        except Year.DoesNotExist:
+            history = history.none()
+
+    if selected_semester:
+        history = history.filter(semester__name__iexact=selected_semester)
+
+    history = history.order_by('-date_paid')
+
+    years = Year.objects.all()[0:4]
+    semesters = Semester.objects.all()
+
+    return render(request, 'payment_history.html', {
+        'history': history,
+        'student': student,
+        'years': years,
+        'semesters': semesters,
+        'selected_year': selected_year,
+        'selected_semester': selected_semester,
+        'STATIC_URL': settings.STATIC_URL
+    })
 
 
 
@@ -241,6 +412,8 @@ def applicant_login(request):
             application_number = form.cleaned_data["application_number"]
             surname = form.cleaned_data["surname"]
 
+            
+
             # Authenticate using the application number as username
             user = authenticate(request, username=application_number, password=surname)
             
@@ -289,15 +462,16 @@ def home(request):
 
 @login_required
 def applicant_profile(request):
-    user = request.user  # Get the logged-in user
+    user = request.user  # Get the logged-in users
     applications = Application.objects.filter(application_number=user.username)  # Fetch their application
     students = Student.objects.filter(application_number=user.username).first()
+    screening = Screening.objects.filter(student=students).first()
 
     if students:
         
         return redirect("admission_success", students.application_number, students.surname )
 
-    return render(request, "applicant_profile.html", {"applications": applications, "students": students})
+    return render(request, "applicant_profile.html", {"applications": applications, "students": students, "screening": screening})
 
 
 
@@ -305,36 +479,42 @@ def applicant_profile(request):
 def student_portal(request):
     user = request.user
     student = Student.objects.filter(application_number=user.username).first()
-    notifications = Notification.objects.all()
-    timetables = TimeTable.objects.filter(department=student.department, semester=student.semester)
+    screening = Screening.objects.filter(student=student).first()
 
     if not student:
         return render(request, "error.html", {"message": "Student profile not found."})
 
+    notifications = Notification.objects.all()
+    department = student.department
+
+    timetables = TimeTable.objects.filter(
+        department=student.department,
+        semester=student.semester
+    )
+
     last_semester = student.get_last_semester()
     last_gpa = student.calculate_gpa_for_semester(last_semester) if last_semester else None
 
-    # Get registered courses for current semester
     registered_courses = RegisteredCourse.objects.filter(
         student=student,
         semester=student.semester
     ).select_related('course')
 
-    # Calculate total units from registered courses
     total_units = sum(reg_course.course.unit for reg_course in registered_courses)
     total_course = registered_courses.count()
-    
-    # Calculate units remaining (max 24 units)
     units_remaining = 24 - total_units if total_units <= 24 else 0
 
     context = {
         'student': student,
         'total_course': total_course,
+        'screening': screening,
+        'screening_status': screening.status if screening else None,
         'total_unit': total_units,
         'units_remaining': units_remaining,
         'registered_courses': registered_courses,
         'notifications': notifications,
         'timetables': timetables,
+        'department': department,
         'last_gpa': last_gpa,
         'last_semester': last_semester,
         'update_profile_picture_url': reverse('update_profile_picture'),
@@ -347,22 +527,42 @@ def student_portal(request):
 
 def student_biodata(request):
     user = request.user  # Get the logged-in user
+    student = Student.objects.filter(application_number=user.username).first()
+    screening = Screening.objects.filter(student=student).first()
+
+    context = {
+        'screening_status': screening.status if screening else None,
+        "student": student,
+        "screening": screening,
+    }
+
     try:
         student = Student.objects.get(application_number=user.username)
     except Student.DoesNotExist:
         student = None  # If student is not found, avoid errors
 
-    return render(request, "biodata.html", {"student": student})
+    return render(request, "biodata.html", context )
 
 
 @login_required
 def CourseRegistration(request):
     student = Student.objects.filter(application_number=request.user.username).first()
+    screening = Screening.objects.filter(student=student).first()
+    courses = Course.objects.filter(department=student.department, semester=student.semester)
+    
+
+    context = {
+
+        'screening_status': screening.status if screening else None,
+        "courses": courses,
+        "student": student,
+        "screening": screening,
+    }
     if not student:
         return redirect('portal')  # or raise 404
 
     courses = Course.objects.filter(department=student.department, semester=student.semester)
-    return render(request, 'course_registration.html', {"courses": courses, "student": student})
+    return render(request, 'course_registration.html', context)
 
 @login_required
 def submit_registration(request):
@@ -390,6 +590,7 @@ def submit_registration(request):
 def registered_courses(request):
     user = request.user
     student = Student.objects.filter(application_number=user.username).first()
+    screening = Screening.objects.filter(student=student).first()
     
     if not student:
         return render(request, "error.html", {"message": "Student profile not found."})
@@ -402,7 +603,9 @@ def registered_courses(request):
 
     return render(request, "registered_courses.html", {
         "registered_courses": registered_courses,
-        "student": student
+        "student": student,
+        "screening": screening,
+        'screening_status': screening.status if screening else None,
     })
 
 def headline_news(request):
@@ -415,28 +618,47 @@ def application_create_view(request):
     if request.method == 'POST':
         form = ApplicationForm(request.POST, request.FILES)
         if form.is_valid():
-            # Save POST data
-            request.session['application_form_data'] = request.POST.dict()
+            cleaned = form.cleaned_data
 
-            # Save profile_picture file content
+            form_data = {
+                'surname': cleaned['surname'],
+                'first_name': cleaned['first_name'],
+                'other_name': cleaned.get('other_name', ''),
+                'email': cleaned['email'],
+                'phone_number': cleaned['phone_number'],
+                'address': cleaned['address'],
+                'date_of_birth': cleaned['date_of_birth'].strftime('%Y-%m-%d') if cleaned.get('date_of_birth') else '',
+                'state_of_origin': cleaned['state_of_origin'].id if cleaned.get('state_of_origin') else None,
+                'local_government': cleaned['local_government'].id if cleaned.get('local_government') else None,
+                'school': cleaned['school'].id if cleaned.get('school') else None,
+                'department': cleaned['department'].id if cleaned.get('department') else None,
+                'academic_session': cleaned['academic_session'].id if cleaned.get('academic_session') else None,
+                'year': cleaned['year'].id if cleaned.get('year') else None,
+                'semester': cleaned['semester'].id if cleaned.get('semester') else None,
+            }
+
+            request.session['application_form_data'] = form_data
+
+            # Save profile picture to session
             profile_picture = request.FILES.get('profile_picture')
             if profile_picture:
                 request.session['profile_picture_name'] = profile_picture.name
-                if profile_picture:
-                   request.session['profile_picture_name'] = profile_picture.name
-                   encoded_file = base64.b64encode(profile_picture.read()).decode('utf-8')
-                   request.session['profile_picture_content'] = encoded_file
-            # Generate unique Paystack reference
+                request.session['profile_picture_content'] = base64.b64encode(profile_picture.read()).decode('utf-8')
+
+            # Payment reference
             payment_reference = str(uuid.uuid4())
             request.session['payment_reference'] = payment_reference
 
-            # Redirect to Paystack
-            return redirect('paystack_payment')  # Or use render to Paystack inline if needed
-
+            return redirect('paystack_payment')
+        else:
+            messages.error(request, "Form is invalid. Please correct the highlighted fields.")
     else:
         form = ApplicationForm()
+
     return render(request, 'application_form.html', {'form': form})
-    
+
+
+
 def get_departments(request):
     school_id = request.GET.get('school_id')
     departments = Department.objects.filter(school_id=school_id).values('id', 'name')
@@ -475,14 +697,23 @@ def Notification_Page(request):
     user = request.user
     notifications = Notification.objects.all()
     student = Student.objects.filter(application_number=user.username).first()
+    screening = Screening.objects.filter(student=student).first()
 
-    return render(request, 'notification.html', {'notifications':notifications, 'student':student})
+    context = {
+        'notifications':notifications, 
+        'student':student, 
+        'screening': Screening,
+        'screening_status': screening.status if screening else None,
+    }
+
+    return render(request, 'notification.html', context)
 
 @require_http_methods(["GET", "POST"])
 def View_Notification(request, Notification_id):
     user = request.user
     student = Student.objects.filter(application_number=user.username).first()
     notification = get_object_or_404(Notification, id=Notification_id)
+    screening = Screening.objects.filter(student=student).first()
 
     # Handle POST request to mark as read
     if request.method == 'POST':
@@ -495,7 +726,7 @@ def View_Notification(request, Notification_id):
     # Handle GET request (normal page load)
     return render(request, 'notification_page.html', {
         'notification': notification,
-        'student': student,
+        'student': student, "screening": screening,'screening_status': screening.status if screening else None,
     })
 
 
