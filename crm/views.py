@@ -22,13 +22,10 @@ from django.utils.timezone import now
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
-
-
-
-
-
-
-
+from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 
 def add_timetable(request):
@@ -87,10 +84,11 @@ def crm_dashboard(request):
     total_applications = Application.objects.count()
     total_schools = School.objects.count()
     total_departments = Department.objects.count()
-    pending_applications = Application.objects.filter(is_approved=False).count()
+    pending_applications = Application.objects.filter(is_approved='pending').count()
     admitted_students = Student.objects.count()
-    approved_applications = Application.objects.filter(is_approved=True).count()
-    total_pending_application = Application.objects.filter(is_approved=False).count()
+    approved_applications = Student.objects.count()
+    total_pending_application = Application.objects.filter(is_approved='pending').count()
+    applications = Application.objects.all()
 
     # Applications by month
     applications_by_month = (
@@ -138,7 +136,8 @@ def crm_dashboard(request):
         "application_counts": json.dumps(application_counts),
         "student_counts": json.dumps(student_counts),
         "approved_applications":approved_applications,
-        "total_pending_application": total_pending_application
+        "total_pending_application": total_pending_application,
+        "applications": applications,
     }
     return render(request, "crm/dashboard.html", context)
 
@@ -304,10 +303,10 @@ def search_applications(request):
 def applicant_list(request):
     # Base queryset with optimization
     applications = Application.objects.select_related(
-        'school', 'department', 'academic_session'
-    ).order_by('-created_at')
+        'school', 'department', 'academic_session', 'state_of_origin', 'local_government'
+    )
     
-    # Filter parameters
+    # Filter parameters with defaults
     filters = {
         'status': request.GET.get('status', 'all'),
         'session': request.GET.get('session', 'all'),
@@ -315,15 +314,18 @@ def applicant_list(request):
         'department': request.GET.get('department', 'all'),
         'date_from': request.GET.get('date_from'),
         'date_to': request.GET.get('date_to'),
-        'search': request.GET.get('search', ''),
-        'view_mode': request.GET.get('view', 'grouped')  # New: grouped or list view
+        'search': request.GET.get('search', '').strip(),
+        'view_mode': request.GET.get('view', 'grouped'),  # 'grouped' or 'list'
+        'page': request.GET.get('page', 1)
     }
 
     # Apply filters
     if filters['status'] == 'pending':
-        applications = applications.filter(is_approved=False)
+        applications = applications.filter(is_approved='pending')
     elif filters['status'] == 'approved':
-        applications = applications.filter(is_approved=True)
+        applications = applications.filter(is_approved='approved')
+    elif filters['status'] == 'declined':
+        applications = applications.filter(is_approved='declined')
     
     if filters['session'] != 'all':
         applications = applications.filter(academic_session__name=filters['session'])
@@ -338,45 +340,58 @@ def applicant_list(request):
         applications = applications.filter(created_at__gte=filters['date_from'])
     
     if filters['date_to']:
-        applications = applications.filter(created_at__lte=filters['date_to'])
+        # Include the entire day for date_to
+        applications = applications.filter(created_at__lt=(filters['date_to'] + ' 23:59:59'))
     
     if filters['search']:
         applications = applications.filter(
             Q(surname__icontains=filters['search']) |
             Q(first_name__icontains=filters['search']) |
+            Q(other_name__icontains=filters['search']) |
             Q(email__icontains=filters['search']) |
             Q(phone_number__icontains=filters['search']) |
-            Q(application_number__icontains=filters['search'])
+            Q(application_number__icontains=filters['search']) |
+            Q(address__icontains=filters['search'])
         )
 
-    # Get distinct values for filters
+    # Get distinct values for filter dropdowns
     filter_options = {
         'academic_sessions': Application.objects.values_list(
             'academic_session__name', flat=True
-        ).distinct().order_by('academic_session__name'),
+        ).distinct().order_by('-academic_session__name'),
         'schools': Application.objects.values_list(
             'school__name', flat=True
         ).distinct().order_by('school__name'),
         'departments': Application.objects.values_list(
             'department__name', flat=True
-        ).distinct().order_by('department__name')
+        ).distinct().order_by('department__name'),
+        'status_choices': ['all', 'pending', 'approved', 'declined']
     }
 
     # Pagination
-    paginator = Paginator(applications, 50)  # Increased per page count
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    paginator = Paginator(applications, 25)  # Show 25 applications per page
+    try:
+        page_obj = paginator.page(filters['page'])
+    except:
+        page_obj = paginator.page(1)
 
     # Prepare data based on view mode
     if filters['view_mode'] == 'grouped':
         # Grouped view data preparation
         grouped_data = {}
         for app in page_obj.object_list:
-            session = app.academic_session.name
+            session = str(app.academic_session)
             school = app.school.name
             department = app.department.name
 
-            grouped_data.setdefault(session, {}).setdefault(school, {}).setdefault(department, []).append(app)
+            if session not in grouped_data:
+                grouped_data[session] = {}
+            if school not in grouped_data[session]:
+                grouped_data[session][school] = {}
+            if department not in grouped_data[session][school]:
+                grouped_data[session][school][department] = []
+                
+            grouped_data[session][school][department].append(app)
         
         display_data = {'grouped_applications': grouped_data}
     else:
@@ -386,18 +401,23 @@ def applicant_list(request):
     # Stats and counts
     stats = {
         'total_applications': Application.objects.count(),
-        'approved_applicants': Application.objects.filter(is_approved=True).count(),
-        'pending_applicants': Application.objects.filter(is_approved=False).count(),
-        'filtered_count': applications.count()
+        'total_declined': Application.objects.filter(is_approved='Declined').count(),
+        'total_pending_application': Application.objects.filter(is_approved='Pending').count(),
+        'total_approved': Application.objects.filter(is_approved='Approved').count(),
+        'approved_applicants': Student.objects.count(),  # Count from Student model
+        'filtered_count': applications.count(),
     }
 
-    return render(request, "crm/applicant_list.html", {
+    context = {
         **display_data,
         **filter_options,
         **stats,
         'page_obj': page_obj,
-        'current_filters': filters
-    })
+        'current_filters': filters,
+        'now': now().date(),  # For date picker max date
+    }
+
+    return render(request, "crm/applicant_list.html", context)
 
 
 def screening_list(request):
@@ -497,9 +517,9 @@ def process_screening(request, pk):  # Changed parameter to 'pk'
     return redirect('screening_list')
 
 def pending_list(request):
-    pending_applications = Application.objects.filter(is_approved=False)
+    pending_applications = Application.objects.filter(is_approved='Pending')
     total_applications = Application.objects.count()
-    total_pending_application = Application.objects.filter(is_approved=False).count()
+    total_pending_application = Application.objects.filter(is_approved='Pending').count()
     # Group applications by school and department
     grouped_applications = {}
     for app in pending_applications:
@@ -516,7 +536,8 @@ def pending_list(request):
     return render(request, "crm/pending_list.html", {
         "grouped_applications": grouped_applications,
         'total_pending_application': total_pending_application,
-        'total_applications': total_applications
+        'total_applications': total_applications,
+        'pending_applications': pending_applications,
     })
 
 
@@ -540,7 +561,7 @@ def get_lgas(request):
 def edit_application(request, application_id):
     applicant = get_object_or_404(Application, id=application_id)
     total_applications = Application.objects.count()
-    total_pending_application = Application.objects.filter(is_approved=False).count()
+    total_pending_application = Application.objects.filter(is_approved='pending').count()
     
     if request.method == 'POST':
         form = ApplicationForm(request.POST, request.FILES, instance=applicant)
@@ -566,7 +587,7 @@ def edit_application(request, application_id):
 def student_list(request):
     students = Student.objects.all()
     total_applications = Application.objects.count()
-    total_pending_application = Application.objects.filter(is_approved=False).count()
+    total_pending_application = Application.objects.filter(is_approved='pending').count()
 
     # Group students by school and department
     grouped_students = {}
@@ -601,9 +622,10 @@ def edit_student(request, student_id):
 
 
 def view_applicant(request, application_id):
+    
     applicant = get_object_or_404(Application, id=application_id)
     total_applications = Application.objects.count()
-    total_pending_application = Application.objects.filter(is_approved=False).count()
+    total_pending_application = Application.objects.filter(is_approved='pending').count()
     return render(request, "crm/applicant_profile.html", {"applicant": applicant,'total_pending_application': total_pending_application, 'total_applications': total_applications})
 
 
@@ -611,7 +633,7 @@ def view_applicant(request, application_id):
 def view_student(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     total_applications = Application.objects.count()
-    total_pending_application = Application.objects.filter(is_approved=False).count()
+    total_pending_application = Application.objects.filter(is_approved='pending').count()
     return render(request, "crm/student_profile.html", {"student": student, 'total_pending_application':total_pending_application, 'total_applications': total_applications})
 
 
@@ -620,14 +642,12 @@ def view_student(request, student_id):
 def approve_application(request, application_id):
     application = get_object_or_404(Application, id=application_id)
 
-    # Check if a student already exists
+    # Prevent duplicate student records
     if Student.objects.filter(application_number=application.application_number).exists():
         messages.warning(request, f"Student with application number {application.application_number} already exists!")
         return redirect("applicant_list")
 
-
-
-    # Create Student record with matric_number
+    # Create student record
     student = Student.objects.create(
         application_number=application.application_number,
         surname=application.surname,
@@ -648,11 +668,72 @@ def approve_application(request, application_id):
     )
 
     # Mark application as approved
-    application.is_approved = True
+    application.is_approved = 'Approved'
     application.save()
 
-    messages.success(request, f"Application {application.application_number} has been approved.")
+    # Prepare email
+    subject = 'Your Application Has Been Approved'
+    context = {
+        'first_name': application.first_name,
+        'application_number': application.application_number,
+        'surname': application.surname,
+    }
+    html_message = render_to_string('emails/approved_email.html', context)
+    plain_message = strip_tags(html_message)
+
+    try:
+        msg = EmailMultiAlternatives(
+            subject,
+            plain_message,
+            settings.DEFAULT_FROM_EMAIL,
+            [application.email],
+        )
+        msg.attach_alternative(html_message, "text/html")
+        msg.send()
+        messages.success(request, f"Application {application.application_number} approved and email sent.")
+    except Exception as e:
+        messages.warning(request, f"Application approved, but email failed: {str(e)}")
+
     return redirect("applicant_list")
+
+
+def decline_application(request, application_id):
+    application = get_object_or_404(Application, id=application_id)
+
+
+    # Delete existing student record (if any)
+    student = Student.objects.filter(application_number=application.application_number).first()
+    if student:
+        student.delete()
+
+    # Mark application as declined
+    application.is_approved = "Declined"
+    application.save()
+
+    # Prepare HTML email
+    subject = 'Your Application to Oceanview University'
+    context = {
+        'first_name': application.first_name,
+        'application_number': application.application_number
+    }
+    html_message = render_to_string('emails/declined_email.html', context)
+    plain_message = strip_tags(html_message)
+
+    try:
+        msg = EmailMultiAlternatives(
+            subject,
+            plain_message,
+            settings.DEFAULT_FROM_EMAIL,
+            [application.email],
+        )
+        msg.attach_alternative(html_message, "text/html")
+        msg.send()
+        messages.info(request, f"Application {application.application_number} rejected and email sent.")
+    except Exception as e:
+        messages.warning(request, f"Application rejected, but email failed: {str(e)}")
+
+    return redirect("applicant_list")
+
 
 
 def revoke_application(request, application_id):
@@ -665,11 +746,40 @@ def revoke_application(request, application_id):
         print(f"🚨 Student {application.application_number} record deleted.")
 
     # Mark application as not approved
-    application.is_approved = False
+    application.is_approved = 'Pending'
     application.save()
+
+    # Send rejection email
+    subject = 'Your Application to Oceanview University'
+    message = f"""
+Dear {application.first_name},
+
+Thank you for applying to Oceanview University.
+
+After careful consideration, we regret to inform you that your application (Application Number: {application.application_number}) was not successful at this time.
+
+We appreciate the effort you put into your application and encourage you to consider applying again next academic session.
+
+Wishing you all the best in your academic journey.
+
+Sincerely,  
+Oceanview University Admissions Team
+"""
+    try:
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [application.email],
+            fail_silently=False,
+        )
+        messages.info(request, f"Application {application.application_number} rejected and email sent.")
+    except Exception as e:
+        messages.warning(request, f"Application rejected, but email failed: {str(e)}")
 
     print(f"🚫 Application {application.application_number} has been revoked.")
     return redirect("applicant_list")
+
 
 
 

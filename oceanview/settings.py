@@ -15,6 +15,21 @@ PAYSTACK_SECRET_KEY = 'sk_test_04fd78fef7da99543475a4893097b4d3a2d7933e'  # Your
 
 PAYSTACK_PUBLIC_KEY = 'pk_test_6f8573c474570944872ad22461e6877a04b3279c'  # your Paystack public key here
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True        # ✅ YES for port 465
+EMAIL_USE_TLS = False       # ❌ DO NOT use TLS with port 465
+
+EMAIL_HOST_USER = 'oceanviewuniversity.edu@gmail.com'
+EMAIL_HOST_PASSWORD = 'wkddefmlayzqhkaw'  # ✔️ Valid App Password
+
+DEFAULT_FROM_EMAIL = 'Oceanview University <oceanviewuniversity.edu@gmail.com>'
+EMAIL_TIMEOUT = 20
+
+
+
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

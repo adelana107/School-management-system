@@ -366,3 +366,34 @@ if (typeof module !== 'undefined' && module.exports) {
         getCookie
     };
 }
+
+
+    //    <!-- Inline Script for Initialization -->
+    
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Counter animation for approved applications
+            const counterElements = document.querySelectorAll('.counter-value');
+            counterElements.forEach(element => {
+                const target = parseInt(element.getAttribute('data-target'));
+                const duration = 2000; // Animation duration in ms
+                const step = target / (duration / 16); // 60fps
+                let current = 0;
+                
+                const updateCounter = () => {
+                    current += step;
+                    if (current < target) {
+                        element.textContent = Math.floor(current);
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                        element.textContent = target;
+                    }
+                };
+                
+                updateCounter();
+            });
+        });

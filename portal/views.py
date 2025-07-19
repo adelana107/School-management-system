@@ -22,6 +22,12 @@ import base64
 from datetime import datetime
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
+from requests.exceptions import RequestException
+from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+
+
 
 # Create your views here.
 
@@ -73,39 +79,47 @@ def acceptance_fees_verify_payment(request):
     headers = {
         'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
     }
-    response = requests.get(url, headers=headers)
-    res_data = response.json()
 
-    if res_data['status'] and res_data['data']['status'] == 'success':
-        paid_amount = res_data['data']['amount']
-        
-        if paid_amount != expected_amount:
-            messages.error(request, f"Payment amount mismatch. Expected {expected_amount/100}, got {paid_amount/100}")
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        res_data = response.json()
+
+        if res_data['status'] and res_data['data']['status'] == 'success':
+            paid_amount = res_data['data']['amount']
+
+            if paid_amount != expected_amount:
+                messages.error(request, f"Payment amount mismatch. Expected {expected_amount/100}, got {paid_amount/100}")
+                return redirect('portal')
+
+            student = get_object_or_404(Student, application_number=request.user.username)
+
+            student.has_paid_acceptance_fee = True
+            student.save()
+
+            PaymentHistory.objects.create(
+                student=student,
+                reference=reference,
+                amount=paid_amount,
+                status='success',
+                payment_type='Acceptance Fees',
+                semester=student.semester,
+                year=student.year
+            )
+
+            del request.session['acceptance_fees_payment_reference']
+            del request.session['acceptance_fees_amount']
+
+            messages.success(request, "Acceptance fees payment successful!")
             return redirect('portal')
 
-        student = get_object_or_404(Student, application_number=request.user.username)
-
-        student.has_paid_acceptance_fee = True
-        student.save()
-
-        PaymentHistory.objects.create(
-            student=student,
-            reference=reference,
-            amount=paid_amount,
-            status='success',
-            payment_type='Acceptance Fees',
-            semester=student.semester,
-            year=student.year
-        )
-
-        del request.session['acceptance_fees_payment_reference']
-        del request.session['acceptance_fees_amount']
-
-        messages.success(request, "Acceptance fees payment successful!")
+        messages.error(request, "Payment was not successful.")
         return redirect('portal')
 
-    messages.error(request, "Payment verification failed.")
-    return redirect('portal')
+    except RequestException as e:
+        print("Error verifying payment:", e)
+        messages.error(request, "Could not verify payment due to a network error. Please try again.")
+        return redirect('portal')
 
 
 
@@ -270,13 +284,47 @@ def payment_verify(request):
         profile_picture_content = request.session.get('profile_picture_content')
         profile_picture_name = request.session.get('profile_picture_name')
         if profile_picture_content and profile_picture_name:
-            from django.core.files.base import ContentFile
-            import base64
             decoded_image = base64.b64decode(profile_picture_content)
             application.profile_picture.save(profile_picture_name, ContentFile(decoded_image), save=False)
 
         # Save application (this will also generate application number and user)
+        application.is_approved = "Pending"
         application.save()
+
+        # Send styled HTML email confirmation
+        try:
+            subject = "🎓 Application Submitted Successfully"
+            from_email = settings.DEFAULT_FROM_EMAIL
+            to_email = [application.email]
+            context = {
+                'first_name': application.first_name,
+                'application_number': application.application_number,
+                'surname': application.surname,
+                'login_url': request.build_absolute_uri('/portal/login/'),
+                'support_email': 'Oceanviewuniversity.edu@gmail.com',
+                'current_year': timezone.now().year,
+            }
+
+            html_content = render_to_string('emails/application_confirmation.html', context)
+            text_content = f"""Dear {application.first_name},
+
+Thank you for submitting your application. Your payment has been verified.
+
+Login Details:
+Application Number: {application.application_number}
+Password (Surname): {application.surname}
+
+Visit your portal to track your status.
+
+Best regards,
+Admissions Team
+"""
+
+            email = EmailMultiAlternatives(subject, text_content, from_email, to_email)
+            email.attach_alternative(html_content, "text/html")
+            email.send()
+        except Exception as email_error:
+            messages.warning(request, f"Application submitted, but email failed: {str(email_error)}")
 
         messages.success(request, "Payment verified and application submitted successfully.")
         return redirect('application_success', application_number=application.application_number, surname=application.surname)
@@ -284,6 +332,8 @@ def payment_verify(request):
     except Exception as e:
         messages.error(request, f"An error occurred while saving your application: {str(e)}")
         return redirect('application_create')
+    
+
 
 def paystack_payment(request):
     form_data = request.session.get('application_form_data')
@@ -466,12 +516,13 @@ def applicant_profile(request):
     applications = Application.objects.filter(application_number=user.username)  # Fetch their application
     students = Student.objects.filter(application_number=user.username).first()
     screening = Screening.objects.filter(student=students).first()
+    applicant = Application.objects.filter(application_number=user.username)
 
     if students:
         
         return redirect("admission_success", students.application_number, students.surname )
 
-    return render(request, "applicant_profile.html", {"applications": applications, "students": students, "screening": screening})
+    return render(request, "applicant_profile.html", {"applications": applications, "students": students, "screening": screening, "applicant": applicant})
 
 
 

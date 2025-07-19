@@ -160,6 +160,13 @@ class AcademicSession(models.Model):
 
 # ------------------ APPLICATION MODEL ------------------
 class Application(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('declined', 'Declined'),
+    ]
+
+
     surname = models.CharField(max_length=100)
     first_name = models.CharField(max_length=100)
     other_name = models.CharField(max_length=100, blank=True, null=True)
@@ -179,7 +186,7 @@ class Application(models.Model):
         default="default-profile.png")
     created_at = models.DateTimeField(default=now, editable=True)
     academic_session = models.ForeignKey(AcademicSession, on_delete=models.CASCADE, related_name="applications")
-    is_approved = models.BooleanField(default=False)
+    is_approved = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     year = models.ForeignKey(Year, default=1, on_delete=models.CASCADE)
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE, default=get_default_semester)
 

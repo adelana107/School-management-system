@@ -5,7 +5,7 @@ from .views import (
     Crmlogin, view_student, move_to_new_semester, move_to_previous_semester, move_semester_confirmationPage,
     semester_success, reverse_semester_confirmationPage, semester_reverse_success, Post_headline, Edit_headline, delete_headline,
     school_view, Notify_student, add_School, department_view, add_department, course_view, add_course,  load_departments, load_courses, add_grade, grade_list,
-    edit_grade, get_departments, get_lgas, chart_data, update_application_status, search_applications, pending_list, add_timetable,  timetable_success, screening_list, screening_detail, process_screening)
+    edit_grade, get_departments, get_lgas, chart_data, update_application_status, search_applications, pending_list, add_timetable,  timetable_success, screening_list, screening_detail, process_screening, decline_application)
 
 urlpatterns = [
     # Applicant URLs
@@ -16,6 +16,7 @@ urlpatterns = [
     path('get-departments/', get_departments, name='get_departments'),
     path('get-lgas/', get_lgas, name='get_lgas'),
     path("approve/<int:application_id>/", approve_application, name="approve_application"),
+    path('decline-application/<int:application_id>/', decline_application, name='decline_application'),
     path('revoke-application/<int:application_id>/', revoke_application, name='revoke_application'),
 
     # Student URLs

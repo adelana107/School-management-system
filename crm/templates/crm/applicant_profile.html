@@ -11,206 +11,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'crm/css/applicant_profile.css' %}">
-    <style>
-        :root {
-            --primary-color: #3498db;
-            --secondary-color: #2c3e50;
-            --success-color: #2ecc71;
-            --danger-color: #e74c3c;
-            --warning-color: #f39c12;
-            --light-bg: #f8f9fa;
-        }
-        
-        body {
-            background-color: var(--light-bg);
-            font-family: 'Poppins', sans-serif;
-            color: #333;
-        }
-        
-        .main-content {
-            margin-left: 270px;
-            padding: 30px;
-            transition: all 0.3s;
-        }
-        
-        .profile-card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            max-width: 800px;
-            margin: 0 auto 30px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .profile-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 8px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-        }
-        
-        .profile-picture {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            border: 5px solid white;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            object-fit: cover;
-            transition: all 0.3s ease;
-        }
-        
-        .profile-picture:hover {
-            transform: scale(1.05);
-        }
-        
-        .status-badge {
-            padding: 8px 15px;
-            border-radius: 50px;
-            font-weight: 500;
-            font-size: 0.9rem;
-            display: inline-block;
-            margin-top: 10px;
-        }
-        
-        .badge-approved {
-            background-color: rgba(46, 204, 113, 0.2);
-            color: var(--success-color);
-        }
-        
-        .badge-pending {
-            background-color: rgba(243, 156, 18, 0.2);
-            color: var(--warning-color);
-        }
-        
-        .badge-declined {
-            background-color: rgba(231, 76, 60, 0.2);
-            color: var(--danger-color);
-        }
-        
-        .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            margin-bottom: 25px;
-            transition: transform 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .card-header {
-            border-radius: 12px 12px 0 0 !important;
-            font-weight: 600;
-            padding: 15px 20px;
-            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-        }
-        
-        .info-table {
-            width: 100%;
-        }
-        
-        .info-table tr:not(:last-child) {
-            border-bottom: 1px solid #eee;
-        }
-        
-        .info-table th {
-            width: 35%;
-            padding: 15px 20px;
-            background-color: #f8f9fa;
-            font-weight: 500;
-            color: var(--secondary-color);
-        }
-        
-        .info-table td {
-            padding: 15px 20px;
-            font-weight: 400;
-        }
-        
-        .btn-action {
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-weight: 500;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .btn-action i {
-            margin-right: 8px;
-        }
-        
-        .btn-approve {
-            background-color: var(--success-color);
-            border-color: var(--success-color);
-        }
-        
-        .btn-decline {
-            background-color: var(--danger-color);
-            border-color: var(--danger-color);
-            margin-left: 10px;
-        }
-        
-        .btn-edit {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-        
-        .btn-export {
-            background-color: #6c757d;
-            border-color: #6c757d;
-        }
-        
-        .btn-revoke {
-            background-color: var(--danger-color);
-            border-color: var(--danger-color);
-        }
-        
-        .footer {
-            position: fixed;
-            bottom: 0;
-            width: calc(100% - 270px);
-            background: var(--secondary-color);
-            color: white;
-            text-align: center;
-            padding: 12px;
-            font-size: 0.9rem;
-            margin-left: 270px;
-        }
-        
-        .footer a {
-            color: #bbb;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .footer a:hover {
-            color: white;
-        }
-        
-        .empty-field {
-            color: #999;
-            font-style: italic;
-        }
-        
-        @media (max-width: 992px) {
-            .main-content {
-                margin-left: 0;
-                padding: 20px;
-            }
-            
-            .footer {
-                width: 100%;
-                margin-left: 0;
-            }
-        }
-    </style>
+  
+  
 </head>
 
 <body>
@@ -218,7 +20,7 @@
     {% include 'crm/sidebar.html' %}
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="main-content fade-in">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="text-primary mb-0">
                 <i class="fas fa-user-graduate me-2"></i>Applicant Profile
@@ -233,28 +35,35 @@
         <!-- Profile Header -->
         <div class="profile-card text-center">
             {% if applicant.profile_picture %}
-                <img src="{{ applicant.profile_picture.url }}" alt="Profile Picture" class="profile-picture">
+                <img src="{{ applicant.profile_picture.url }}" alt="{{ applicant.first_name }} {{ applicant.surname }}" class="profile-picture">
             {% else %}
-                <img src="{% static 'images/default-profile.png' %}" alt="Default Profile" class="profile-picture">
+                <img src="{% static 'images/default-profile.png' %}" alt="Default profile picture" class="profile-picture">
             {% endif %}
-            <h3 class="mt-3 text-primary fw-bold">
-                {{ applicant.surname }} 
-                {% if applicant.other_name %}{{ applicant.other_name }}{% endif %}
-                {{ applicant.first_name }}
-            </h3>
-            <p class="text-muted mb-1">{{ applicant.application_number }}</p>
-            <span class="status-badge 
-                {% if applicant.is_approved %}badge-approved
-                {% elif applicant.is_declined %}badge-declined
-                {% else %}badge-pending{% endif %}">
-                {% if applicant.is_approved %}
-                    <i class="fas fa-check-circle me-1"></i> Approved
-                {% elif applicant.is_declined %}
-                    <i class="fas fa-times-circle me-1"></i> Declined
-                {% else %}
-                    <i class="fas fa-clock me-1"></i> Pending
-                {% endif %}
-            </span>
+            
+            <div class="profile-info">
+                <h3 class="profile-name">
+                    <span class="surname">{{ applicant.surname }}</span>
+                    {% if applicant.other_name %}
+                        <span class="other-name">{{ applicant.other_name }}</span>
+                    {% endif %}
+                    <span class="first-name">{{ applicant.first_name }}</span>
+                </h3>
+                
+                <p class="application-number">{{ applicant.application_number }}</p>
+                
+                <div class="status-badge 
+    {% if applicant.is_approved == 'Approved' %}badge-approved
+    {% elif applicant.is_approved == 'Declined' %}badge-declined
+    {% else %}badge-pending{% endif %}">
+    {% if applicant.is_approved == 'Approved' %}
+        <i class="fas fa-check-circle"></i> Approved
+    {% elif applicant.is_approved == 'Declined' %}
+        <i class="fas fa-times-circle"></i> Declined
+    {% else %}
+        <i class="fas fa-clock"></i> Pending
+    {% endif %}
+</div>
+            </div>
         </div>
 
         <!-- Personal Information -->
@@ -265,16 +74,12 @@
             <div class="card-body p-0">
                 <table class="table table-borderless info-table mb-0">
                     <tr><th>First Name</th> <td>{{ applicant.first_name }}</td></tr>
-                    {% if applicant.other_name %}
-                        <tr><th>Middle Name</th> <td>{{ applicant.other_name }}</td></tr>
-                    {% else %}
-                        <tr><th>Middle Name</th> <td class="empty-field">Not provided</td></tr>
-                    {% endif %}
+                    <tr><th>Middle Name</th> <td>{{ applicant.other_name|default:"<span class='empty-field'>Not provided</span>" }}</td></tr>
                     <tr><th>Surname</th> <td>{{ applicant.surname }}</td></tr>
                     <tr><th>Email</th> <td>{{ applicant.email }}</td></tr>
                     <tr><th>Phone</th> <td>{{ applicant.phone_number }}</td></tr>
                     <tr><th>Date of Birth</th> <td>{{ applicant.date_of_birth|date:"F j, Y" }}</td></tr>
-                    <tr><th>Address</th> <td>{{ applicant.address|default:"Not provided" }}</td></tr>
+                    <tr><th>Address</th> <td>{{ applicant.address|default:"<span class='empty-field'>Not provided</span>" }}</td></tr>
                 </table>
             </div>
         </div>
@@ -288,9 +93,7 @@
                 <table class="table table-borderless info-table mb-0">
                     <tr><th>School</th> <td>{{ applicant.school.name }}</td></tr>
                     <tr><th>Course</th> <td>{{ applicant.department.name }}</td></tr>
-                    {% if applicant.previous_education %}
-                        <tr><th>Previous Education</th> <td>{{ applicant.previous_education }}</td></tr>
-                    {% endif %}
+                    <tr><th>Previous Education</th> <td>{{ applicant.previous_education|default:"<span class='empty-field'>Not provided</span>" }}</td></tr>
                 </table>
             </div>
         </div>
@@ -302,14 +105,10 @@
             </div>
             <div class="card-body p-0">
                 <table class="table table-borderless info-table mb-0">
-                    <tr><th>State of Origin</th> <td>{{ applicant.state_of_origin|default:"Not provided" }}</td></tr>
-                    <tr><th>Local Government</th> <td>{{ applicant.local_government|default:"Not provided" }}</td></tr>
-                    {% if applicant.gender %}
-                        <tr><th>Gender</th> <td>{{ applicant.get_gender_display }}</td></tr>
-                    {% endif %}
-                    {% if applicant.marital_status %}
-                        <tr><th>Marital Status</th> <td>{{ applicant.get_marital_status_display }}</td></tr>
-                    {% endif %}
+                    <tr><th>State of Origin</th> <td>{{ applicant.state_of_origin|default:"<span class='empty-field'>Not provided</span>" }}</td></tr>
+                    <tr><th>Local Government</th> <td>{{ applicant.local_government|default:"<span class='empty-field'>Not provided</span>" }}</td></tr>
+                    <tr><th>Gender</th> <td>{{ applicant.get_gender_display|default:"<span class='empty-field'>Not specified</span>" }}</td></tr>
+                    <tr><th>Marital Status</th> <td>{{ applicant.get_marital_status_display|default:"<span class='empty-field'>Not specified</span>" }}</td></tr>
                 </table>
             </div>
         </div>
@@ -324,12 +123,16 @@
                 <div class="row">
                     {% for doc in applicant.documents.all %}
                     <div class="col-md-4 mb-3">
-                        <div class="document-card p-3 border rounded">
+                        <div class="document-card p-3 border rounded h-100">
                             <div class="d-flex align-items-center">
-                                <i class="fas fa-file-pdf text-danger me-3 fs-4"></i>
+                                {% if doc.file.name|lower|slice:"-4:" == ".pdf" %}
+                                    <i class="fas fa-file-pdf text-danger document-icon"></i>
+                                {% else %}
+                                    <i class="fas fa-file-image text-primary document-icon"></i>
+                                {% endif %}
                                 <div>
                                     <h6 class="mb-0">{{ doc.document_type }}</h6>
-                                    <small class="text-muted">{{ doc.file.name|slice:"20:" }}</small>
+                                    <small class="text-muted">{{ doc.get_filename|truncatechars:20 }}</small>
                                 </div>
                             </div>
                             <a href="{{ doc.file.url }}" target="_blank" class="stretched-link"></a>
@@ -343,64 +146,48 @@
 
         <!-- Action Buttons -->
         <div class="d-flex justify-content-between mt-4 flex-wrap">
-            <div class="mb-3">
-                <a href="{% url 'edit_application' applicant.id %}" class="btn btn-primary btn-action btn-edit me-2">
+            <div class="mb-3 d-flex flex-wrap">
+                <a href="{% url 'edit_application' applicant.id %}" class="btn btn-action btn-edit me-2 mb-2">
                     <i class="fas fa-edit me-1"></i> Edit Profile
                 </a>
-                <a href="#" class="btn btn-secondary btn-action btn-export me-2">
+                <a href="#" class="btn btn-action btn-export me-2 mb-2">
                     <i class="fas fa-file-pdf me-1"></i> Export PDF
+                </a>
+                <a href="#" class="btn btn-action btn-secondary me-2 mb-2">
+                    <i class="fas fa-envelope me-1"></i> Send Email
                 </a>
             </div>
             
             <div class="mb-3">
-                {% if applicant.is_approved %}
-                    <a href="{% url 'revoke_application' applicant.id %}" class="btn btn-danger btn-action btn-revoke">
-                        <i class="fas fa-times me-1"></i> Revoke Approval
+                <div class="d-flex flex-wrap">
+                    <a href="{% url 'approve_application' applicant.id %}" class="btn btn-action btn-approve me-2 mb-2">
+                        <i class="fas fa-check me-1"></i> Approve
                     </a>
-                {% elif applicant.is_declined %}
-                    <a href="{% url 'approve_application' applicant.id %}" class="btn btn-success btn-action btn-approve">
-                        <i class="fas fa-check me-1"></i> Approve Application
+                    <a href="{% url 'decline_application' applicant.id %}" class="btn btn-action btn-decline mb-2">
+                        <i class="fas fa-times me-1"></i> Decline
                     </a>
-                {% else %}
-                    <div class="d-flex">
-                        <a href="{% url 'approve_application' applicant.id %}" class="btn btn-success btn-action btn-approve">
-                            <i class="fas fa-check me-1"></i> Approve
-                        </a>
-                        <a href="#" class="btn btn-danger btn-action btn-decline">
-                            <i class="fas fa-times me-1"></i> Decline
-                        </a>
-                    </div>
-                {% endif %}
+                    
+                    <a href="{% url 'revoke_application' applicant.id %}" class="btn btn-action btn-revoke">
+                        <i class="fas fa-undo me-1"></i> Revoke Approval
+                    </a>
+                    
+                    
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Footer -->
-    <div class="footer">
+    <footer class="footer">
         © 2025 University Portal | v2.1.0 | <a href="#" class="text-decoration-none">Privacy Policy</a>
-    </div>
+    </footer>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Add hover effects to cards
-        document.querySelectorAll('.card').forEach(card => {
-            card.addEventListener('mouseenter', () => {
-                card.style.boxShadow = '0 10px 20px rgba(0, 0, 0, 0.1)';
-            });
-            card.addEventListener('mouseleave', () => {
-                card.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.05)';
-            });
-        });
-        
-        // Confirm before revoking or declining
-        document.querySelectorAll('.btn-revoke, .btn-decline').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                if (!confirm('Are you sure you want to perform this action?')) {
-                    e.preventDefault();
-                }
-            });
-        });
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.6/umd/popper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="{% static 'crm/js/applicant_profile.js' %}"></script>
+    
 </body>
 </html>
