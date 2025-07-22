@@ -667,8 +667,9 @@ def approve_application(request, application_id):
         semester=application.semester,
     )
 
+
     # Mark application as approved
-    application.is_approved = 'Approved'
+    application.is_approved = 'approved'
     application.save()
 
     # Prepare email
@@ -707,7 +708,7 @@ def decline_application(request, application_id):
         student.delete()
 
     # Mark application as declined
-    application.is_approved = "Declined"
+    application.is_approved = "declined"
     application.save()
 
     # Prepare HTML email

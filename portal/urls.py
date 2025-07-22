@@ -3,6 +3,12 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth.views import LogoutView
 from . import views
+from django.contrib.auth.views import PasswordChangeView
+from django.urls import reverse_lazy
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import PasswordChangeDoneView
+from django.contrib.auth import views as auth_views
+
 
 urlpatterns = [
     # Home Page
@@ -64,11 +70,17 @@ urlpatterns = [
     #result verification
     path('result-verification/', views.result_upload, name='result_upload'),
 
-
+    # Change Password
+    path('change-password/', views.change_password, name='change_password'),
+    path('change-password/success/', views.password_success, name='password_success'),
 
     
-]
+
+    ]
 
 # Serve media files in development mode
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+

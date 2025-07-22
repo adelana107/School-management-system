@@ -1,61 +1,45 @@
 $(document).ready(function() {
-            // Search functionality
-            $("#searchInput").on("keyup", function() {
-                var value = $(this).val().toLowerCase();
-                var statusFilter = $("#statusFilter").val();
-                
-                $(".application-row").each(function() {
-                    var rowText = $(this).text().toLowerCase();
-                    var rowStatus = $(this).data("status");
-                    var statusMatch = (statusFilter === "all") || (rowStatus === statusFilter);
-                    
-                    $(this).toggle(
-                        rowText.indexOf(value) > -1 && statusMatch
-                    );
-                });
+            // Initialize date inputs
+            flatpickr('input[type="date"]', {
+                dateFormat: "Y-m-d",
+                allowInput: true,
+                maxDate: "{{ now|date:'Y-m-d' }}"
             });
 
-            // Status filter functionality
-            $("#statusFilter").change(function() {
-                var statusFilter = $(this).val();
-                var searchValue = $("#searchInput").val().toLowerCase();
+            // Layout adjustment
+            function adjustLayout() {
+                const sidebar = $('.crm-sidebar');
+                const main = $('.crm-main');
                 
-                $(".application-row").each(function() {
-                    var rowText = $(this).text().toLowerCase();
-                    var rowStatus = $(this).data("status");
-                    var textMatch = rowText.indexOf(searchValue) > -1 || searchValue === "";
-                    var statusMatch = (statusFilter === "all") || (rowStatus === statusFilter);
-                    
-                    $(this).toggle(
-                        textMatch && statusMatch
-                    );
-                });
-            });
-
-            // Auto-expand accordion if search is active
-            $("#searchInput").on("keyup", function() {
-                if ($(this).val().length > 0) {
-                    $(".accordion-collapse").addClass("show");
-                }
-            });
-
-            // Remember accordion state
-            $('.accordion-button').click(function() {
-                var target = $(this).attr('data-bs-target');
-                var isCollapsed = $(target).hasClass('show');
-                
-                if (!isCollapsed) {
-                    localStorage.setItem(target, 'expanded');
+                if ($(window).width() > 992) {
+                    const sidebarWidth = sidebar.outerWidth();
+                    main.css('margin-left', sidebarWidth + 'px');
                 } else {
-                    localStorage.removeItem(target);
+                    main.css('margin-left', '0');
+                }
+            }
+
+            // Initial adjustment
+            adjustLayout();
+            
+            // Adjust on window resize with debounce
+            let resizeTimer;
+            $(window).resize(function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(adjustLayout, 250);
+            });
+
+            // Confirm before delete
+            $('a[href*="delete_application"]').on('click', function(e) {
+                if (!confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
+                    e.preventDefault();
                 }
             });
 
-            // Restore accordion state on page load
-            $('.accordion-collapse').each(function() {
-                var id = '#' + $(this).attr('id');
-                if (localStorage.getItem(id) === 'expanded') {
-                    $(this).addClass('show');
-                }
+            // Toggle advanced filters
+            $('#advancedFilters').on('show.bs.collapse', function() {
+                $('[data-bs-target="#advancedFilters"]').html('<i class="fas fa-sliders-h me-1"></i> Fewer Filters');
+            }).on('hide.bs.collapse', function() {
+                $('[data-bs-target="#advancedFilters"]').html('<i class="fas fa-sliders-h me-1"></i> More Filters');
             });
         });

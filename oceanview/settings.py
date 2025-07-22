@@ -11,18 +11,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-g&k9$^*2af$-*my8r8kfecjezglsiyy-jaqa))+1*1uvgyd52@'
-PAYSTACK_SECRET_KEY = 'sk_test_04fd78fef7da99543475a4893097b4d3a2d7933e'  # Your actual secret key from Paystack dashboard
-
-PAYSTACK_PUBLIC_KEY = 'pk_test_6f8573c474570944872ad22461e6877a04b3279c'  # your Paystack public key here
+PAYSTACK_SECRET_KEY = 'sk_test_04fd78fef7da99543475a4893097b4d3a2d7933e'  
+PAYSTACK_PUBLIC_KEY = 'pk_test_6f8573c474570944872ad22461e6877a04b3279c'  
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 465
-EMAIL_USE_SSL = True        # ✅ YES for port 465
-EMAIL_USE_TLS = False       # ❌ DO NOT use TLS with port 465
+EMAIL_USE_SSL = True        
+EMAIL_USE_TLS = False       
 
 EMAIL_HOST_USER = 'oceanviewuniversity.edu@gmail.com'
-EMAIL_HOST_PASSWORD = 'wkddefmlayzqhkaw'  # ✔️ Valid App Password
+EMAIL_HOST_PASSWORD = 'wkddefmlayzqhkaw'  
 
 DEFAULT_FROM_EMAIL = 'Oceanview University <oceanviewuniversity.edu@gmail.com>'
 EMAIL_TIMEOUT = 20

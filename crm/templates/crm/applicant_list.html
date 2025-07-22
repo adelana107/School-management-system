@@ -201,11 +201,11 @@
                                                                     <small class="text-muted">{{ app.phone_number }}</small>
                                                                 </td>
                                                                 <td>
-                                                                    {% if app.is_approved == 'Approved' %}
+                                                                    {% if app.is_approved == 'approved' %}
                                                                         <span class="status-badge approved">
                                                                             <i class="fas fa-check-circle"></i> Approved
                                                                         </span>
-                                                                    {% elif app.is_approved == 'Declined' %}
+                                                                    {% elif app.is_approved == 'declined' %}
                                                                         <span class="status-badge declined">
                                                                             <i class="fas fa-times-circle"></i> Declined
                                                                         </span>
@@ -278,11 +278,11 @@
                                                 <small class="text-muted">{{ app.department.name }}</small>
                                             </td>
                                             <td>
-                                                {% if app.is_approved == 'Approved' %}
+                                                {% if app.is_approved == 'approved' %}
                                                     <span class="status-badge approved">
                                                         <i class="fas fa-check-circle"></i> Approved
                                                     </span>
-                                                {% elif app.is_approved == 'Declined' %}
+                                                {% elif app.is_approved == 'declined' %}
                                                     <span class="status-badge declined">
                                                         <i class="fas fa-times-circle"></i> Declined
                                                     </span>

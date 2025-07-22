@@ -52,12 +52,12 @@
                 <p class="application-number">{{ applicant.application_number }}</p>
                 
                 <div class="status-badge 
-    {% if applicant.is_approved == 'Approved' %}badge-approved
-    {% elif applicant.is_approved == 'Declined' %}badge-declined
+    {% if applicant.is_approved == 'approved' %}badge-approved
+    {% elif applicant.is_approved == 'declined' %}badge-declined
     {% else %}badge-pending{% endif %}">
-    {% if applicant.is_approved == 'Approved' %}
+    {% if applicant.is_approved == 'approved' %}
         <i class="fas fa-check-circle"></i> Approved
-    {% elif applicant.is_approved == 'Declined' %}
+    {% elif applicant.is_approved == 'declined' %}
         <i class="fas fa-times-circle"></i> Declined
     {% else %}
         <i class="fas fa-clock"></i> Pending

@@ -145,8 +145,10 @@ class Lga(models.Model):
         return self.name
 
 # ------------------ HELPER FUNCTION ------------------
+# ------------------ HELPER FUNCTION ------------------
 def get_default_semester():
     return Semester.objects.first()  # Returns `None` if no semester exists
+
 
 # ------------------ ACADEMIC SESSION MODEL ------------------
 class AcademicSession(models.Model):
@@ -224,6 +226,7 @@ class Application(models.Model):
 
 # ------------------ STUDENT MODEL ------------------
 class Student(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile', null=True, blank=True)
     surname = models.CharField(max_length=100)
     first_name = models.CharField(max_length=100)
     other_name = models.CharField(max_length=100, blank=True, null=True)

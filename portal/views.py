@@ -26,10 +26,41 @@ from requests.exceptions import RequestException
 from django.core.mail import send_mail
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from django.contrib.auth import update_session_auth_hash
+from django.db import transaction, IntegrityError
+from django.utils.html import strip_tags
+
 
 
 
 # Create your views here.
+
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        if not new_password or not confirm_password:
+            messages.error(request, "Both fields are required.")
+        elif new_password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+        elif len(new_password) < 6:
+            messages.error(request, "Password must be at least 6 characters.")
+        else:
+            request.user.set_password(new_password)
+            request.user.save()
+            update_session_auth_hash(request, request.user)  # Keep user logged in
+            messages.success(request, "Password changed successfully.")
+            return redirect('password_success')  # or wherever you want
+
+    return render(request, 'accounts/change_password.html')
+
+@login_required
+def password_success(request):
+    return render(request, 'accounts/password_success.html')
+
 
 
 @login_required
@@ -243,6 +274,18 @@ def school_fees_verify_payment(request):
     return redirect('portal')
 
 
+
+def generate_unique_application_number():
+    while True:
+        number = Application.generate_application_number()
+        if not User.objects.filter(username=number).exists():
+            return number
+
+
+
+
+
+
 def payment_verify(request):
     reference = request.GET.get('reference')
     session_data = request.session.get('application_form_data')
@@ -332,7 +375,9 @@ Admissions Team
     except Exception as e:
         messages.error(request, f"An error occurred while saving your application: {str(e)}")
         return redirect('application_create')
-    
+
+
+
 
 
 def paystack_payment(request):
