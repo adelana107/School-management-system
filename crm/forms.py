@@ -1,5 +1,61 @@
 from django import forms
+from django.contrib.auth.models import User, Group
+from portal.models import StaffProfile
 from portal.models import Application, Department, School, State, Lga, Student, Headline, Category, Notification, Course, Grade, Semester, TimeTable
+from django.core.exceptions import ValidationError
+
+
+
+
+class StaffCreationForm(forms.Form):
+    username = forms.CharField(label="Username")
+    email = forms.EmailField(label="Email")
+    password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
+    password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput)
+    school = forms.ModelChoiceField(queryset=School.objects.all(), label="School")
+    department = forms.ModelChoiceField(queryset=Department.objects.all(), label="Department")
+    group = forms.ModelChoiceField(queryset=Group.objects.all(), label="Assign Group")
+
+    def clean_username(self):
+        username = self.cleaned_data.get("username")
+        if User.objects.filter(username=username).exists():
+            raise ValidationError("This username is already taken. Choose another one.")
+        return username
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+
+        if password1 and password2 and password1 != password2:
+            raise ValidationError("Passwords do not match.")
+        return cleaned_data
+
+    def save(self):
+        user = User.objects.create_user(
+            username=self.cleaned_data["username"],
+            email=self.cleaned_data["email"],
+            password=self.cleaned_data["password1"]
+        )
+
+        user.is_staff = True  # ✅ Give staff access
+        user.is_active = True  # ✅ Ensure the user is active
+        user.save()
+
+        group = self.cleaned_data["group"]
+        user.groups.add(group)
+
+        school = self.cleaned_data["school"]
+        department = self.cleaned_data["department"]
+
+        StaffProfile.objects.create(
+            user=user,
+            school=school,
+            department=department
+        )
+
+        return user
+
 
 
 

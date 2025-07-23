@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import School, Department, Application, State, Lga, Student, AcademicSession, Year, Semester, Course, RegisteredCourse, Headline, Category, Notification, Grade, Lecturer, TimeTable, PaymentHistory, Screening
+from .models import School, Department, Application, State, Lga, Student, AcademicSession, Year, Semester, Course, RegisteredCourse, Headline, Category, Notification, Grade, Lecturer, TimeTable, PaymentHistory, Screening, StaffProfile
 # Register your models here.
 
 
@@ -22,3 +22,4 @@ admin.site.register(Lecturer)
 admin.site.register(TimeTable)
 admin.site.register(PaymentHistory)
 admin.site.register(Screening)
+admin.site.register(StaffProfile)

@@ -11,9 +11,9 @@
     <!-- Fonts and Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
-
-    <!-- Styles -->
     <link rel="stylesheet" href="{% static 'crm/css/sidebar.css' %}">
+
+
 </head>
 
 <body>
@@ -156,18 +156,25 @@
                                 System Alerts
                             </a>
                         </li>
+                        <li class="submenu-item priority-low">
+                            <a href="{% url 'create_staff_profile'   %}">
+                                <i class="fas fa-user-plus"></i>
+                                Create Account
+                            </a>
+                        </li>
                     </ul>
                 </li>
             {% endif %}
 
             <!-- Logout -->
-            <form method="post" action="{% url 'crm_logout' %}">
-              {% csrf_token %}
-                <button type="submit" class="btn btn-danger">
-                   <i class="fas fa-sign-out-alt"></i> Logout
-               </button>
-            </form>
-
+            <li class="menu-item">
+                <form method="post" action="{% url 'crm_logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </form>
+            </li>
 
         </ul>
 
@@ -206,11 +213,111 @@
                 </div>
             </div>
         </div>
+      
 
+        <!-- Scroll Controls -->
+<div class="scroll-controls">
+  <button class="scroll-btn scroll-up" aria-label="Scroll up">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+  <div class="scroll-track">
+    <div class="scroll-thumb"></div>
+  </div>
+  <button class="scroll-btn scroll-down" aria-label="Scroll down">
+    <i class="fas fa-chevron-down"></i>
+  </button>
+  <!-- Scroll Controls -->
+<div class="scroll-controls">
+    <button class="scroll-btn scroll-up" aria-label="Scroll up">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+    <div class="scroll-track">
+        <div class="scroll-thumb"></div>
+    </div>
+    <button class="scroll-btn scroll-down" aria-label="Scroll down">
+        <i class="fas fa-chevron-down"></i>
+    </button>
+</div>
+</div>
     </div>
 </div>
 
-<!-- JS -->
-<script src="{% static 'crm/js/sidebar.js' %}"></script>
+<script>
+    // Toggle sidebar collapse
+    document.getElementById('sidebarToggle').addEventListener('click', function() {
+        document.querySelector('.sidebar-container').classList.toggle('collapsed');
+    });
+
+    // Toggle submenus
+    document.querySelectorAll('.has-submenu > .menu-link').forEach(item => {
+        item.addEventListener('click', function(e) {
+            if (document.querySelector('.sidebar-container').classList.contains('collapsed')) {
+                return;
+            }
+            e.preventDefault();
+            const parent = this.parentElement;
+            parent.classList.toggle('open');
+        });
+    });
+
+    // Dark mode toggle
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        const icon = document.getElementById('darkModeIcon');
+        const text = document.getElementById('darkModeText');
+        const isDark = document.body.classList.contains('dark-mode');
+        
+        icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        text.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+        document.getElementById('darkModeSwitch').checked = isDark;
+
+        // Scroll functionality for sidebar
+const sidebarMenu = document.querySelector('.sidebar-menu');
+const scrollUpBtn = document.querySelector('.scroll-up');
+const scrollDownBtn = document.querySelector('.scroll-down');
+const scrollThumb = document.querySelector('.scroll-thumb');
+const scrollTrack = document.querySelector('.scroll-track');
+
+// Update scroll thumb position
+function updateScrollThumb() {
+    const scrollableHeight = sidebarMenu.scrollHeight - sidebarMenu.clientHeight;
+    const thumbHeight = Math.max(20, (sidebarMenu.clientHeight / sidebarMenu.scrollHeight) * scrollTrack.clientHeight);
+    const thumbPosition = (sidebarMenu.scrollTop / scrollableHeight) * (scrollTrack.clientHeight - thumbHeight);
+    
+    scrollThumb.style.height = `${thumbHeight}px`;
+    scrollThumb.style.transform = `translateY(${thumbPosition}px)`;
+}
+
+// Scroll buttons functionality
+scrollUpBtn.addEventListener('click', () => {
+    sidebarMenu.scrollBy({ top: -100, behavior: 'smooth' });
+});
+
+scrollDownBtn.addEventListener('click', () => {
+    sidebarMenu.scrollBy({ top: 100, behavior: 'smooth' });
+});
+
+// Update thumb position on scroll
+sidebarMenu.addEventListener('scroll', updateScrollThumb);
+
+// Initialize thumb position
+updateScrollThumb();
+
+// Show/hide scroll controls based on content height
+function checkScrollNeeded() {
+    const isScrollable = sidebarMenu.scrollHeight > sidebarMenu.clientHeight;
+    document.querySelector('.scroll-controls').style.display = isScrollable ? 'flex' : 'none';
+}
+
+// Check on load and resize
+window.addEventListener('load', checkScrollNeeded);
+window.addEventListener('resize', checkScrollNeeded);
+
+// For collapsed state - show controls only when needed
+const sidebarContainer = document.querySelector('.sidebar-container');
+const observer = new MutationObserver(checkScrollNeeded);
+observer.observe(sidebarContainer, { attributes: true, attributeFilter: ['class'] });
+    }
+</script>
 </body>
 </html>

@@ -11,6 +11,14 @@ from django.utils.timezone import now
 # ------------------ CATEGORY MODEL ------------------
 
 
+    
+
+
+
+
+
+
+
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -369,6 +377,17 @@ class Screening(models.Model):
     def passed_screening(self):
         """Backward compatibility with old boolean field"""
         return self.status == 'approved'
+    
+class StaffProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    school = models.ForeignKey(School, on_delete=models.CASCADE)  
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+      department_name = self.department.name if self.department else "No Staff"
+      return f"{self.user.username} - {department_name} Profile"
+
+
 
 
 # ------------------ GRADE MODEL ------------------

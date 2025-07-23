@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Staff Account | Enterprise CRM</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3a7bd5;
+            --primary-dark: #2c5fb3;
+            --accent: #00d2ff;
+            --success: #4CAF50;
+            --danger: #F44336;
+            --warning: #FFC107;
+            --light: #f9fbfd;
+            --dark: #263238;
+            --gray: #607D8B;
+            --border: #e0e5ec;
+            --sidebar-width: 280px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2.5rem;
+            margin-left: var(--sidebar-width);
+            transition: margin-left 0.3s ease;
+        }
+
+        /* Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--dark);
+            letter-spacing: -0.5px;
+        }
+
+        .page-subtitle {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-top: 0.5rem;
+            font-weight: 400;
+        }
+
+        .breadcrumb {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        .breadcrumb li {
+            display: flex;
+            align-items: center;
+        }
+
+        .breadcrumb li:not(:last-child)::after {
+            content: '›';
+            margin: 0 0.75rem;
+            color: var(--gray);
+            opacity: 0.6;
+        }
+
+        .breadcrumb a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .breadcrumb a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2.5rem;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            background-color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+        }
+
+        .card-title i {
+            margin-right: 0.75rem;
+            color: var(--primary);
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        /* Form */
+        .staff-form {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        .form-section {
+            grid-column: span 1;
+        }
+
+        .form-section-full {
+            grid-column: span 2;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title i {
+            margin-right: 0.75rem;
+            color: var(--primary);
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark);
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: var(--dark);
+            background-color: white;
+            background-clip: padding-box;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            outline: 0;
+            box-shadow: 0 0 0 3px rgba(58, 123, 213, 0.15);
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23607D8B' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 14px 10px;
+            padding-right: 2.5rem;
+        }
+
+        /* Password Toggle */
+        .password-toggle {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            top: 50%;
+            right: 1rem;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 0.25rem;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toggle-password:hover {
+            background-color: rgba(0,0,0,0.05);
+            color: var(--dark);
+        }
+
+        /* Error Handling */
+        .errorlist {
+            list-style: none;
+            padding: 0;
+            color: var(--danger);
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+            font-weight: 500;
+        }
+
+        .is-invalid {
+            border-color: var(--danger) !important;
+        }
+
+        .is-invalid:focus {
+            box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.15);
+        }
+
+        .form-text {
+            display: block;
+            margin-top: 0.25rem;
+            font-size: 0.8rem;
+            color: var(--gray);
+            font-weight: 400;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            line-height: 1.5;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn i {
+            margin-right: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            color: white;
+            background-color: var(--primary);
+            border: 1px solid var(--primary);
+            box-shadow: 0 2px 5px rgba(58, 123, 213, 0.2);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            box-shadow: 0 4px 8px rgba(58, 123, 213, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            background-color: transparent;
+        }
+
+        .btn-outline:hover {
+            background-color: rgba(58, 123, 213, 0.08);
+        }
+
+        /* Form Actions */
+        .form-actions {
+            grid-column: span 2;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .staff-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-section, .form-section-full {
+                grid-column: span 1;
+            }
+            
+            .form-actions {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 1.5rem;
+                margin-left: 0;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .form-group {
+            opacity: 0;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .form-group:nth-child(1) { animation-delay: 0.1s; }
+        .form-group:nth-child(2) { animation-delay: 0.2s; }
+        .form-group:nth-child(3) { animation-delay: 0.3s; }
+        .form-group:nth-child(4) { animation-delay: 0.4s; }
+        .form-group:nth-child(5) { animation-delay: 0.5s; }
+        .form-group:nth-child(6) { animation-delay: 0.6s; }
+        .form-group:nth-child(7) { animation-delay: 0.7s; }
+    </style>
+</head>
+<body>
+    {% include 'crm/sidebar.html' %}
+    
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Create Staff Account</h1>
+                <p class="page-subtitle">Add new staff members to your organization</p>
+                <ul class="breadcrumb">
+                    <li><a href="#"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="#"><i class="fas fa-users"></i> Staff</a></li>
+                    <li><i class="fas fa-user-plus"></i> Create</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-id-card"></i> Staff Profile Creation</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="staff-form">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="form-section-full">
+                            <div class="form-group">
+                                <div class="errorlist">
+                                    {% for error in form.non_field_errors %}
+                                        <div class="alert alert-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Account Information Section -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <h3 class="section-title"><i class="fas fa-user-circle"></i> Account Credentials</h3>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_username" class="form-label">Username</label>
+                            <div class="input-group">
+                                <span class="input-prefix"><i class="fas fa-at"></i></span>
+                                {{ form.username }}
+                            </div>
+                            {% if form.username.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.username.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            <small class="form-text">Unique identifier for system access</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_email" class="form-label">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-prefix"><i class="fas fa-envelope"></i></span>
+                                {{ form.email }}
+                            </div>
+                            {% if form.email.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.email.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            <small class="form-text">Official organizational email</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Security Section -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <h3 class="section-title"><i class="fas fa-lock"></i> Security</h3>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_password1" class="form-label">Password</label>
+                            <div class="password-toggle">
+                                {{ form.password1 }}
+                                <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            {% if form.password1.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.password1.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            <small class="form-text">Minimum 8 characters with complexity</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_password2" class="form-label">Confirm Password</label>
+                            <div class="password-toggle">
+                                {{ form.password2 }}
+                                <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            {% if form.password2.errors %}
+                                <ul class="errorlist">
+                                    {% for error in form.password2.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Organization Section -->
+                    <div class="form-section-full">
+                        <div class="section-header">
+                            <h3 class="section-title"><i class="fas fa-building"></i> Organization Details</h3>
+                        </div>
+                        
+                        <div class="form-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;">
+                            <div class="form-group">
+                                <label for="id_school" class="form-label">School/Institution</label>
+                                {{ form.school }}
+                                {% if form.school.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.school.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="id_department" class="form-label">Department</label>
+                                {{ form.department }}
+                                {% if form.department.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.department.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="id_group" class="form-label">Access Group</label>
+                                {{ form.group }}
+                                {% if form.group.errors %}
+                                    <ul class="errorlist">
+                                        {% for error in form.group.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                                <small class="form-text">Defines permissions and access levels</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="reset" class="btn btn-outline">
+                            <i class="fas fa-undo"></i> Reset Form
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Create Staff Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Password visibility toggle
+            document.querySelectorAll('.toggle-password').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const input = this.parentElement.querySelector('input');
+                    const icon = this.querySelector('i');
+                    
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                        this.setAttribute('aria-label', 'Hide password');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                        this.setAttribute('aria-label', 'Show password');
+                    }
+                });
+            });
+            
+            // Add error class to fields with errors
+            document.querySelectorAll('.errorlist').forEach(function(errorlist) {
+                const input = errorlist.parentElement.querySelector('input, select');
+                if (input) {
+                    input.classList.add('is-invalid');
+                    
+                    // Add focus on error
+                    input.addEventListener('focus', function() {
+                        this.classList.add('is-invalid');
+                    });
+                }
+            });
+            
+            // Enhanced select styling
+            document.querySelectorAll('select.form-control').forEach(function(select) {
+                select.addEventListener('focus', function() {
+                    this.parentElement.querySelector('.select-arrow').style.color = 'var(--primary)';
+                });
+                
+                select.addEventListener('blur', function() {
+                    this.parentElement.querySelector('.select-arrow').style.color = 'var(--gray)';
+                });
+            });
+            
+            // Form submission validation
+            const form = document.querySelector('.staff-form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    let isValid = true;
+                    
+                    // Check password match
+                    const password1 = document.getElementById('id_password1');
+                    const password2 = document.getElementById('id_password2');
+                    
+                    if (password1 && password2 && password1.value !== password2.value) {
+                        isValid = false;
+                        password2.classList.add('is-invalid');
+                        
+                        // Create error message if not exists
+                        if (!password2.nextElementSibling || !password2.nextElementSibling.classList.contains('errorlist')) {
+                            const errorList = document.createElement('ul');
+                            errorList.className = 'errorlist';
+                            errorList.innerHTML = '<li>Passwords do not match</li>';
+                            password2.parentElement.insertBefore(errorList, password2.nextElementSibling);
+                        }
+                    }
+                    
+                    if (!isValid) {
+                        e.preventDefault();
+                        
+                        // Scroll to first error
+                        const firstError = document.querySelector('.is-invalid');
+                        if (firstError) {
+                            firstError.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
+                            
+                            // Add focus
+                            setTimeout(() => {
+                                firstError.focus();
+                            }, 500);
+                        }
+                    }
+                });
+            }
+            
+            // Animate form sections on scroll
+            const animateOnScroll = function() {
+                const formGroups = document.querySelectorAll('.form-group');
+                
+                formGroups.forEach(function(group) {
+                    const groupPosition = group.getBoundingClientRect().top;
+                    const screenPosition = window.innerHeight / 1.3;
+                    
+                    if (groupPosition < screenPosition) {
+                        group.style.opacity = '1';
+                        group.style.transform = 'translateY(0)';
+                    }
+                });
+            };
+            
+            window.addEventListener('scroll', animateOnScroll);
+            animateOnScroll(); // Run once on load
+        });
+    </script>
+</body>
+</html>

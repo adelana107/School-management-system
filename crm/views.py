@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from portal.models import Application, School, Department, Student, Year, Semester, Headline, Notification, Course, Grade, Lga, State, Screening, AcademicSession
+from portal.models import Application, School, Department, Student, Year, Semester, Headline, Notification, Course, Grade, Lga, State, Screening, AcademicSession, StaffProfile
 from django.contrib.auth.decorators import user_passes_test,login_required
 from .forms import ApplicationForm, StudentForm, CrmLoginForm, HeadlineForm, NotificationForm, SchoolForm, DepartmentForm, CourseForm, GradeForm, TimeTableForm
 from django.db.models import Count, Q
@@ -28,6 +28,24 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.http import HttpResponseForbidden
 from django.contrib.auth import logout
+from crm.forms import StaffCreationForm
+
+
+@login_required
+def create_staff_profile(request):
+    if request.method == 'POST':
+        form = StaffCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('staff_success')  # replace with actual success page
+    else:
+        form = StaffCreationForm()
+    return render(request, 'crm/accounts/create_staff_profile.html', {'form': form})
+
+
+def staff_success(request):
+    return render(request, 'crm/accounts/staff_success.html')
+
 
 
 
@@ -337,19 +355,25 @@ def search_applications(request):
     
     return JsonResponse({'results': results})
 
-
 @login_required
 def applicant_list(request):
-    # Base queryset with optimization
     if not request.user.is_superuser and not request.user.groups.filter(name='Admission Officer').exists():
         return HttpResponseForbidden("You do not have permission to view this applicant.")
 
-
+    # Get all applications
     applications = Application.objects.select_related(
         'school', 'department', 'academic_session', 'state_of_origin', 'local_government'
     )
-    
-    # Filter parameters with defaults
+
+    # ✨ Filter by department for Admission Officers
+    if not request.user.is_superuser:
+        try:
+            staff_profile = request.user.staffprofile
+            applications = applications.filter(department=staff_profile.department)
+        except StaffProfile.DoesNotExist:
+            return HttpResponseForbidden("Your staff profile is not configured.")
+
+    # --- FILTERING SECTION REMAINS THE SAME ---
     filters = {
         'status': request.GET.get('status', 'all'),
         'session': request.GET.get('session', 'all'),
@@ -358,34 +382,32 @@ def applicant_list(request):
         'date_from': request.GET.get('date_from'),
         'date_to': request.GET.get('date_to'),
         'search': request.GET.get('search', '').strip(),
-        'view_mode': request.GET.get('view', 'grouped'),  # 'grouped' or 'list'
+        'view_mode': request.GET.get('view', 'grouped'),
         'page': request.GET.get('page', 1)
     }
 
-    # Apply filters
     if filters['status'] == 'pending':
         applications = applications.filter(is_approved='pending')
     elif filters['status'] == 'approved':
         applications = applications.filter(is_approved='approved')
     elif filters['status'] == 'declined':
         applications = applications.filter(is_approved='declined')
-    
+
     if filters['session'] != 'all':
         applications = applications.filter(academic_session__name=filters['session'])
-    
+
     if filters['school'] != 'all':
         applications = applications.filter(school__name=filters['school'])
-    
+
     if filters['department'] != 'all':
         applications = applications.filter(department__name=filters['department'])
-    
+
     if filters['date_from']:
         applications = applications.filter(created_at__gte=filters['date_from'])
-    
+
     if filters['date_to']:
-        # Include the entire day for date_to
         applications = applications.filter(created_at__lt=(filters['date_to'] + ' 23:59:59'))
-    
+
     if filters['search']:
         applications = applications.filter(
             Q(surname__icontains=filters['search']) |
@@ -397,7 +419,7 @@ def applicant_list(request):
             Q(address__icontains=filters['search'])
         )
 
-    # Get distinct values for filter dropdowns
+    # --- Filter dropdown options ---
     filter_options = {
         'academic_sessions': Application.objects.values_list(
             'academic_session__name', flat=True
@@ -411,16 +433,15 @@ def applicant_list(request):
         'status_choices': ['all', 'pending', 'approved', 'declined']
     }
 
-    # Pagination
-    paginator = Paginator(applications, 25)  # Show 25 applications per page
+    # --- Pagination ---
+    paginator = Paginator(applications, 25)
     try:
         page_obj = paginator.page(filters['page'])
     except:
         page_obj = paginator.page(1)
 
-    # Prepare data based on view mode
+    # --- View mode ---
     if filters['view_mode'] == 'grouped':
-        # Grouped view data preparation
         grouped_data = {}
         for app in page_obj.object_list:
             session = str(app.academic_session)
@@ -433,21 +454,20 @@ def applicant_list(request):
                 grouped_data[session][school] = {}
             if department not in grouped_data[session][school]:
                 grouped_data[session][school][department] = []
-                
+
             grouped_data[session][school][department].append(app)
-        
+
         display_data = {'grouped_applications': grouped_data}
     else:
-        # Flat list view data preparation
         display_data = {'applications_list': page_obj.object_list}
 
-    # Stats and counts
+    # --- Statistics ---
     stats = {
         'total_applications': Application.objects.count(),
         'total_declined': Application.objects.filter(is_approved='Declined').count(),
         'total_pending_application': Application.objects.filter(is_approved='Pending').count(),
         'total_approved': Application.objects.filter(is_approved='Approved').count(),
-        'approved_applicants': Student.objects.count(),  # Count from Student model
+        'approved_applicants': Student.objects.count(),
         'filtered_count': applications.count(),
     }
 
@@ -457,17 +477,20 @@ def applicant_list(request):
         **stats,
         'page_obj': page_obj,
         'current_filters': filters,
-        'now': now().date(),  # For date picker max date
+        'now': now().date(),
     }
 
     return render(request, "crm/applicant_list.html", context)
 
 
 
+
+
 @login_required
 def screening_list(request):
-    # Permission check
-    if not request.user.is_superuser and not request.user.groups.filter(name='Screening Officer').exists():
+    # Only superuser or screening officer can view
+    is_officer = request.user.groups.filter(name='Screening Officer').exists()
+    if not request.user.is_superuser and not is_officer:
         return HttpResponseForbidden("You do not have permission to view this applicant.")
 
     screenings = Screening.objects.select_related('student').order_by('-id')
@@ -483,7 +506,16 @@ def screening_list(request):
         latest_session = AcademicSession.objects.order_by('-id').first()
         session_filter = latest_session.name if latest_session else None
 
-    # Apply filters using __name for FK relations
+    # 👇 Restrict screenings if Screening Officer
+    if is_officer and not request.user.is_superuser:
+        try:
+            officer_profile = request.user.staffprofile  # Corrected attribute access
+            officer_dept = officer_profile.department
+            screenings = screenings.filter(student__department=officer_dept)
+        except StaffProfile.DoesNotExist:
+            return HttpResponseForbidden("Your user profile is not configured correctly.")
+
+    # Apply user-selected filters
     if school_filter:
         screenings = screenings.filter(student__school__name=school_filter)
     if department_filter:
@@ -495,37 +527,31 @@ def screening_list(request):
 
     status_options = ['pending', 'approved', 'declined']
 
-    # Get distinct schools and departments (names only)
     schools = Student.objects.values_list('school__name', flat=True).distinct().order_by('school__name')
     departments = Student.objects.values_list('department__name', flat=True).distinct().order_by('department__name')
 
-    sessions = [session_filter] if session_filter else []
-
     # Filter departments by selected school name
     if school_filter:
-        departments = Student.objects.filter(school__name=school_filter) \
-                                     .values_list('department__name', flat=True) \
+        departments = Student.objects.filter(school__name=school_filter)\
+                                     .values_list('department__name', flat=True)\
                                      .distinct().order_by('department__name')
 
-    # Group screenings by school and department
+    # Group by school and department
     grouped_screenings = {}
     for screening in screenings:
         school = screening.student.school
         department = screening.student.department
-
         if school not in grouped_screenings:
             grouped_screenings[school] = {}
-
         if department not in grouped_screenings[school]:
             grouped_screenings[school][department] = []
-
         grouped_screenings[school][department].append(screening)
 
     context = {
         'grouped_screenings': grouped_screenings,
         'schools': schools,
         'departments': departments,
-        'sessions': sessions,
+        'sessions': [session_filter] if session_filter else [],
         'selected_school': school_filter,
         'selected_department': department_filter,
         'selected_session': session_filter,
@@ -535,7 +561,6 @@ def screening_list(request):
     }
 
     return render(request, 'crm/screening_list.html', context)
-
 
 
 
@@ -597,14 +622,23 @@ def process_screening(request, pk):
 
 @login_required
 def pending_list(request):
+    user = request.user
+    is_officer = user.groups.filter(name='Admission Officer').exists()
 
-    if not request.user.is_superuser and not request.user.groups.filter(name='Admission Officer').exists():
+    if not user.is_superuser and not is_officer:
         return HttpResponseForbidden("You do not have permission to view this applicant.")
 
-
+    # Start with all pending applications
     pending_applications = Application.objects.filter(is_approved='Pending')
-    total_applications = Application.objects.count()
-    total_pending_application = Application.objects.filter(is_approved='Pending').count()
+
+    # If Admission Officer, filter by their department
+    if is_officer and not user.is_superuser:
+        try:
+            staff_profile = user.staffprofile
+            pending_applications = pending_applications.filter(department=staff_profile.department)
+        except StaffProfile.DoesNotExist:
+            return HttpResponseForbidden("Your staff profile is not configured properly.")
+
     # Group applications by school and department
     grouped_applications = {}
     for app in pending_applications:
@@ -618,12 +652,16 @@ def pending_list(request):
 
         grouped_applications[school][department].append(app)
 
+    total_applications = Application.objects.count()
+    total_pending_application = pending_applications.count()
+
     return render(request, "crm/pending_list.html", {
         "grouped_applications": grouped_applications,
         'total_pending_application': total_pending_application,
         'total_applications': total_applications,
         'pending_applications': pending_applications,
     })
+
 
 
 @login_required    
