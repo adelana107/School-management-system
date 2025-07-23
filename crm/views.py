@@ -67,7 +67,7 @@ def Crmlogout(request):
     
     logout(request)
     messages.success(request, "You have been securely logged out.")
-    return redirect("/")  # Make sure 'crm_login' exists in your urls
+    return redirect("crm_login")  # Make sure 'crm_login' exists in your urls
 
 
 
@@ -476,32 +476,38 @@ def screening_list(request):
     school_filter = request.GET.get('school')
     department_filter = request.GET.get('department')
     session_filter = request.GET.get('session')
+    status_filter = request.GET.get('status')
 
     # Default to latest session if not provided
     if not session_filter:
         latest_session = AcademicSession.objects.order_by('-id').first()
         session_filter = latest_session.name if latest_session else None
 
-    # Apply filters
+    # Apply filters using __name for FK relations
     if school_filter:
-        screenings = screenings.filter(student__school=school_filter)
+        screenings = screenings.filter(student__school__name=school_filter)
     if department_filter:
-        screenings = screenings.filter(student__department=department_filter)
+        screenings = screenings.filter(student__department__name=department_filter)
     if session_filter:
         screenings = screenings.filter(student__academic_session__name=session_filter)
+    if status_filter:
+        screenings = screenings.filter(status=status_filter)
 
-    # Get unique filters
-    schools = Student.objects.values_list('school', flat=True).distinct().order_by('school')
-    departments = Student.objects.values_list('department', flat=True).distinct().order_by('department')
+    status_options = ['pending', 'approved', 'declined']
+
+    # Get distinct schools and departments (names only)
+    schools = Student.objects.values_list('school__name', flat=True).distinct().order_by('school__name')
+    departments = Student.objects.values_list('department__name', flat=True).distinct().order_by('department__name')
+
     sessions = [session_filter] if session_filter else []
 
-    # Filter department by selected school
+    # Filter departments by selected school name
     if school_filter:
-        departments = Student.objects.filter(school=school_filter)\
-                                     .values_list('department', flat=True)\
-                                     .distinct().order_by('department')
+        departments = Student.objects.filter(school__name=school_filter) \
+                                     .values_list('department__name', flat=True) \
+                                     .distinct().order_by('department__name')
 
-    # Group by school and department
+    # Group screenings by school and department
     grouped_screenings = {}
     for screening in screenings:
         school = screening.student.school
@@ -524,7 +530,10 @@ def screening_list(request):
         'selected_department': department_filter,
         'selected_session': session_filter,
         'total_students': screenings.count(),
+        'selected_status': status_filter,
+        'status_options': status_options,
     }
+
     return render(request, 'crm/screening_list.html', context)
 
 

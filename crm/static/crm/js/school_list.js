@@ -11,3 +11,16 @@ $(document).ready(function() {
             // Tooltips
             $('[data-bs-toggle="tooltip"]').tooltip();
         });
+
+
+const statusFilter = document.getElementById('statusFilter');
+if (statusFilter) {
+    statusFilter.addEventListener('change', function () {
+        if (filterForm) {
+            filterForm.submit();
+        }
+    });
+}
+
+
+

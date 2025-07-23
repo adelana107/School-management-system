@@ -58,6 +58,14 @@
                                             <option value="{{ department }}" {% if selected_department == department %}selected{% endif %}>{{ department }}</option>
                                         {% endfor %}
                                     </select>
+
+                                    <select class="form-select form-select-sm me-2" name="status" id="statusFilter">
+    <option value="">All Statuses</option>
+    <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending</option>
+    <option value="approved" {% if selected_status == 'approved' %}selected{% endif %}>Approved</option>
+    <option value="declined" {% if selected_status == 'declined' %}selected{% endif %}>Declined</option>
+</select>
+
                                     <button type="submit" class="btn btn-sm btn-primary me-2" id="filterButton">
                                         <span class="btn-text">
                                             <i class="fas fa-search me-1"></i> Filter
