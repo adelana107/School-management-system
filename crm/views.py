@@ -466,53 +466,63 @@ def applicant_list(request):
 
 @login_required
 def screening_list(request):
-
+    # Permission check
     if not request.user.is_superuser and not request.user.groups.filter(name='Screening Officer').exists():
         return HttpResponseForbidden("You do not have permission to view this applicant.")
 
     screenings = Screening.objects.select_related('student').order_by('-id')
-    
+
     # Get filter parameters
     school_filter = request.GET.get('school')
     department_filter = request.GET.get('department')
-    
-    # Apply filters if provided
+    session_filter = request.GET.get('session')
+
+    # Default to latest session if not provided
+    if not session_filter:
+        latest_session = AcademicSession.objects.order_by('-id').first()
+        session_filter = latest_session.name if latest_session else None
+
+    # Apply filters
     if school_filter:
         screenings = screenings.filter(student__school=school_filter)
     if department_filter:
         screenings = screenings.filter(student__department=department_filter)
-    
-    # Get unique schools and departments
+    if session_filter:
+        screenings = screenings.filter(student__academic_session__name=session_filter)
+
+    # Get unique filters
     schools = Student.objects.values_list('school', flat=True).distinct().order_by('school')
     departments = Student.objects.values_list('department', flat=True).distinct().order_by('department')
-    
-    # If school is selected, filter departments for that school
+    sessions = [session_filter] if session_filter else []
+
+    # Filter department by selected school
     if school_filter:
         departments = Student.objects.filter(school=school_filter)\
-                                    .values_list('department', flat=True)\
-                                    .distinct()\
-                                    .order_by('department')
-    
+                                     .values_list('department', flat=True)\
+                                     .distinct().order_by('department')
+
     # Group by school and department
     grouped_screenings = {}
     for screening in screenings:
         school = screening.student.school
         department = screening.student.department
-        
+
         if school not in grouped_screenings:
             grouped_screenings[school] = {}
-            
+
         if department not in grouped_screenings[school]:
             grouped_screenings[school][department] = []
-            
+
         grouped_screenings[school][department].append(screening)
-    
+
     context = {
         'grouped_screenings': grouped_screenings,
         'schools': schools,
         'departments': departments,
+        'sessions': sessions,
         'selected_school': school_filter,
         'selected_department': department_filter,
+        'selected_session': session_filter,
         'total_students': screenings.count(),
     }
     return render(request, 'crm/screening_list.html', context)

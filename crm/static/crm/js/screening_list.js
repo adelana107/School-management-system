@@ -55,3 +55,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
+
+
+const sessionFilter = document.getElementById('sessionFilter');
+if (sessionFilter) {
+    sessionFilter.addEventListener('change', function () {
+        if (filterForm) {
+            filterForm.submit();
+        }
+    });
+}

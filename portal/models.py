@@ -160,6 +160,7 @@ class AcademicSession(models.Model):
     def __str__(self):
         return self.name
 
+
 # ------------------ APPLICATION MODEL ------------------
 class Application(models.Model):
     STATUS_CHOICES = [
@@ -355,6 +356,7 @@ class Screening(models.Model):
     ssce_result = models.FileField(upload_to="ssce_results/", blank=True, null=True)
     jamb_result = models.FileField(upload_to="jamb_results/", blank=True, null=True)
     student = models.OneToOneField(Student, on_delete=models.CASCADE, related_name='screening')
+    academic_session = models.ForeignKey(AcademicSession, on_delete=models.SET_NULL, null=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     review_notes = models.TextField(blank=True, null=True)
     reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
