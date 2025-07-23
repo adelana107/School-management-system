@@ -160,16 +160,23 @@
             
             <div class="mb-3">
                 <div class="d-flex flex-wrap">
+                    {% if not is_already_student %}
                     <a href="{% url 'approve_application' applicant.id %}" class="btn btn-action btn-approve me-2 mb-2">
                         <i class="fas fa-check me-1"></i> Approve
                     </a>
+                    {% endif %}
+                    
+                     {% if not is_already_student %}
                     <a href="{% url 'decline_application' applicant.id %}" class="btn btn-action btn-decline mb-2">
                         <i class="fas fa-times me-1"></i> Decline
                     </a>
+                    {% endif %}
                     
+                   {% if request.user.is_superuser %}
                     <a href="{% url 'revoke_application' applicant.id %}" class="btn btn-action btn-revoke">
                         <i class="fas fa-undo me-1"></i> Revoke Approval
                     </a>
+                    {% endif %}
                     
                     
                 </div>

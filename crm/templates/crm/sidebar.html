@@ -7,116 +7,131 @@
     <title>OceanView Admin</title>
     <meta name="theme-color" content="#1e3a5f">
     <meta name="color-scheme" content="light dark">
-    <!-- Font Awesome -->
+
+    <!-- Fonts and Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
     <link rel="stylesheet" href="{% static 'crm/css/sidebar.css' %}">
-
 </head>
+
 <body>
-    <div class="sidebar-container">
-        <div class="sidebar">
-            <!-- Logo and Brand -->
-            <div class="sidebar-header">
-                <div class="brand-wrapper">
-                    <i class="fas fa-water brand-icon"></i>
-                    <h3 class="brand-text">OceanView</h3>
-                    <span class="badge badge-admin">ADMIN</span>
-                </div>
-                <button class="sidebar-toggle" id="sidebarToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
+<div class="sidebar-container">
+    <div class="sidebar">
+
+        <!-- Sidebar Header -->
+        <div class="sidebar-header">
+            <div class="brand-wrapper">
+                <i class="fas fa-water brand-icon"></i>
+                <h3 class="brand-text">OceanView</h3>
+                <span class="badge badge-admin">ADMIN</span>
             </div>
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
 
-            <!-- Navigation Menu -->
-            <ul class="sidebar-menu">
-                <li class="menu-item active">
-                    <a href="{% url 'dashboard' %}" class="menu-link" data-tooltip="Dashboard">
-                        <span class="menu-icon"><i class="fas fa-home"></i></span>
-                        <span class="menu-text">Dashboard</span>
-                    </a>
-                </li>
-                
-                <li class="menu-item">
-                    <a href="{% url 'applicant_list' %}" class="menu-link" data-tooltip="Applications">
-                        <span class="menu-icon"><i class="fas fa-file-alt"></i></span>
-                        <span class="menu-text">Applications</span>
-                        <span class="menu-badge">{{ total_applications}}</span>
-                    </a>
-                </li>
-                <li class="menu-item">
-    <a href="{% url 'pending_list' %}" class="menu-link" data-tooltip="Pending Applications">
-        <span class="menu-icon"><i class="fas fa-hourglass-half"></i></span>
-        <span class="menu-text">Pending Applications</span>
-        <span class="menu-badge badge-warning">{{ total_pending_application }}</span>
-    </a>
-</li>
+        <!-- Navigation Menu -->
+        <ul class="sidebar-menu">
 
+            <li class="menu-item active">
+                <a href="{% url 'dashboard' %}" class="menu-link">
+                    <span class="menu-icon"><i class="fas fa-home"></i></span>
+                    <span class="menu-text">Dashboard</span>
+                </a>
+            </li>
+            
+            {% if request.user.is_superuser or request.user.groups.all.0.name == 'Admission Officer' %}
+            <li class="menu-item">
+                <a href="{% url 'applicant_list' %}" class="menu-link">
+                    <span class="menu-icon"><i class="fas fa-file-alt"></i></span>
+                    <span class="menu-text">Applications</span>
+                    <span class="menu-badge">{{ total_applications }}</span>
+                </a>
+            </li>
+
+            <li class="menu-item">
+                <a href="{% url 'pending_list' %}" class="menu-link">
+                    <span class="menu-icon"><i class="fas fa-hourglass-half"></i></span>
+                    <span class="menu-text">Pending Applications</span>
+                    <span class="menu-badge badge-warning">{{ total_pending_application }}</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% if request.user.is_superuser %}
                 <li class="menu-item">
-                    <a href="{% url 'student_list' %}" class="menu-link" data-tooltip="Students">
+                    <a href="{% url 'student_list' %}" class="menu-link">
                         <span class="menu-icon"><i class="fas fa-user-graduate"></i></span>
                         <span class="menu-text">Students</span>
                     </a>
                 </li>
 
                 <li class="menu-item">
-                    <a href="{% url 'Post_headline' %}" class="menu-link" data-tooltip="Post Headline">
+                    <a href="{% url 'Post_headline' %}" class="menu-link">
                         <span class="menu-icon"><i class="fas fa-newspaper"></i></span>
                         <span class="menu-text">Post Headline</span>
                     </a>
                 </li>
+
                 <li class="menu-item">
-                    <a href="{% url 'Notify_student' %}" class="menu-link" data-tooltip="Send Notification">
+                    <a href="{% url 'Notify_student' %}" class="menu-link">
                         <span class="menu-icon"><i class="fas fa-paper-plane"></i></span>
                         <span class="menu-text">Send Notification</span>
                     </a>
                 </li>
+            {% endif %}
 
+            {% if request.user.is_superuser or "Class Adviser" in user_groups or "HOD (Head of Department)" in user_groups or "Dean" in user_groups %}
                 <li class="menu-item">
-                    <a href="{% url 'school_list' %}" class="menu-link" data-tooltip="School">
+                    <a href="{% url 'school_list' %}" class="menu-link">
                         <span class="menu-icon"><i class="fas fa-school"></i></span>
                         <span class="menu-text">School</span>
                     </a>
                 </li>
+
                 <li class="menu-item">
-                    <a href="{% url 'department_list' %}" class="menu-link" data-tooltip="Department">
+                    <a href="{% url 'department_list' %}" class="menu-link">
                         <span class="menu-icon"><i class="fas fa-book"></i></span>
                         <span class="menu-text">Department</span>
                     </a>
                 </li>
 
                 <li class="menu-item">
-                    <a href="{% url 'course_list' %}" class="menu-link" data-tooltip="Courses">
+                    <a href="{% url 'course_list' %}" class="menu-link">
                         <span class="menu-icon"><i class="fas fa-book-open"></i></span>
                         <span class="menu-text">Courses</span>
                     </a>
                 </li>
 
                 <li class="menu-item">
-                    <a href="{% url 'grade_list' %}" class="menu-link" data-tooltip="Grades">
+                    <a href="{% url 'grade_list' %}" class="menu-link">
                         <span class="menu-icon"><i class="fas fa-graduation-cap"></i></span>
                         <span class="menu-text">Grades</span>
                     </a>
                 </li>
 
                 <li class="menu-item">
-                    <a href="{%url 'add_timetable' %}" class="menu-link" data-tooltip="Time-table">
+                    <a href="{% url 'add_timetable' %}" class="menu-link">
                         <span class="menu-icon"><i class="fas fa-calendar"></i></span>
                         <span class="menu-text">Time Table</span>
                     </a>
                 </li>
+            {% endif %}
 
+            {% if request.user.is_superuser or "Screening Officer" in user_groups %}
                 <li class="menu-item">
-                    <a href="{% url 'screening_list'   %}" class="menu-link" data-tooltip="Screening">
+                    <a href="{% url 'screening_list' %}" class="menu-link">
                         <span class="menu-icon"><i class="fas fa-clipboard-check"></i></span>
                         <span class="menu-text">Screening</span>
                     </a>
                 </li>
-                
-                <!-- Quick Actions Dropdown -->
+            {% endif %}
+
+            {% if request.user.is_superuser %}
                 <li class="menu-item has-submenu">
-                    <a href="#" class="menu-link" data-tooltip="Quick Actions">
+                    <a href="#" class="menu-link">
                         <span class="menu-icon"><i class="fas fa-bolt"></i></span>
                         <span class="menu-text">Quick Actions</span>
                         <span class="menu-badge badge-urgent">3</span>
@@ -126,61 +141,76 @@
                         <li class="submenu-item priority-high">
                             <a href="{% url 'confirmation_page' %}">
                                 <i class="fas fa-arrow-circle-up"></i>
-                                <span>Move to Next Semester</span>
-                                <span class="submenu-badge">2</span>
+                                Move to Next Semester
                             </a>
                         </li>
                         <li class="submenu-item priority-medium">
                             <a href="{% url 'reverse_confirmation_page' %}">
                                 <i class="fas fa-arrow-circle-down"></i>
-                                <span>Reverse Semester</span>
-                                <span class="submenu-badge">5</span>
+                                Reverse Semester
                             </a>
                         </li>
                         <li class="submenu-item priority-low">
                             <a href="#">
                                 <i class="fas fa-bell"></i>
-                                <span>System Alerts</span>
-                                <span class="submenu-badge">1</span>
+                                System Alerts
                             </a>
                         </li>
                     </ul>
                 </li>
-            </ul>
+            {% endif %}
 
-            <!-- Settings Section -->
-            <div class="sidebar-footer">
-                <div class="settings-menu">
-                    <div class="dark-mode-toggle" onclick="toggleDarkMode()">
-                        <div class="toggle-icon">
-                            <i id="darkModeIcon" class="fas fa-moon"></i>
-                        </div>
-                        <span id="darkModeText">Dark Mode</span>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="darkModeSwitch">
-                            <label for="darkModeSwitch"></label>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- User Profile -->
-                <div class="user-profile">
-                    <div class="user-avatar">
-                        <img src="{% static 'images/default-avatar.png' %}" alt="User Avatar">
-                    </div>
-                    <div class="user-info">
-                        <span class="user-name">Admin User</span>
-                        <span class="user-role">Super Admin</span>
-                    </div>
-                    <div class="user-actions">
-                        <a href="#"><i class="fas fa-cog"></i></a>
+            <!-- Logout -->
+            <form method="post" action="{% url 'crm_logout' %}">
+              {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                   <i class="fas fa-sign-out-alt"></i> Logout
+               </button>
+            </form>
+
+
+        </ul>
+
+        <!-- Sidebar Footer -->
+        <div class="sidebar-footer">
+            <div class="settings-menu">
+                <div class="dark-mode-toggle" onclick="toggleDarkMode()">
+                    <div class="toggle-icon"><i id="darkModeIcon" class="fas fa-moon"></i></div>
+                    <span id="darkModeText">Dark Mode</span>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="darkModeSwitch">
+                        <label for="darkModeSwitch"></label>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- JavaScript -->
+            <!-- User Profile -->
+            <div class="user-profile">
+                <div class="user-avatar">
+                    <img src="{% static 'images/default-avatar.png' %}" alt="User Avatar">
+                </div>
+                <div class="user-info">
+                    <span class="user-name">{{ request.user.get_full_name|default:request.user.username }}</span>
+                    <span class="user-role">
+                        {% if request.user.is_superuser %}
+                            Super Admin
+                        {% elif user_groups %}
+                            {{ user_groups.0 }}
+                        {% else %}
+                            Staff
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="user-actions">
+                    <a href="#"><i class="fas fa-cog"></i></a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- JS -->
 <script src="{% static 'crm/js/sidebar.js' %}"></script>
 </body>
 </html>

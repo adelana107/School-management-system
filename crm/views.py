@@ -26,9 +26,20 @@ from django.core.mail import send_mail
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.http import HttpResponseForbidden
+from django.contrib.auth import logout
 
 
+
+@login_required
 def add_timetable(request):
+
+    
+    allowed_groups = ['Class Adviser', 'HOD (Head of Department)', 'Dean']
+
+    if not request.user.is_superuser and not request.user.groups.filter(name__in=allowed_groups).exists():
+       return HttpResponseForbidden("You do not have permission to view this applicant.")
+
     
     if request.method == "POST":
         form = TimeTableForm(request.POST, request.FILES)
@@ -41,45 +52,61 @@ def add_timetable(request):
 
     return render(request, "crm/add_time-table.html", {"form": form})
 
+
+
+
+@login_required
 def timetable_success(request):
     return render(request, "crm/timetable_success.html")
 
 
+
+
+
+def Crmlogout(request):
+    
+    logout(request)
+    messages.success(request, "You have been securely logged out.")
+    return redirect("/")  # Make sure 'crm_login' exists in your urls
+
+
+
 def Crmlogin(request):
+    form = CrmLoginForm()  # Always define form first
+
     if request.method == "POST":
         form = CrmLoginForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data["email"]
             password = form.cleaned_data["password"]
 
-            # Check if a user exists with this email
             try:
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
                 messages.error(request, "User with this email does not exist.")
                 return render(request, "crm/login.html", {"form": form})
 
-            # Authenticate user
             user = authenticate(request, username=user.username, password=password)
 
-            if user is not None and user.is_superuser:  # Ensure only superusers can log in
+            if user is not None and (user.is_superuser or user.is_staff):
                 login(request, user)
                 return redirect("dashboard")
             else:
-                messages.error(request, "Invalid email or password.")
-    else:
-        form = CrmLoginForm()
+                messages.error(request, "Access denied. You are not authorized to use the CRM.")
 
     return render(request, "crm/login.html", {"form": form})
+
+
 
 def is_superuser(user):
     """Check if the user is a superuser."""
     return user.is_superuser
 
 
-@user_passes_test(is_superuser)
+
 @login_required(login_url="crm_login")
 def crm_dashboard(request):
+
     # Dashboard metrics
     total_applications = Application.objects.count()
     total_schools = School.objects.count()
@@ -141,8 +168,15 @@ def crm_dashboard(request):
     }
     return render(request, "crm/dashboard.html", context)
 
+
+@login_required
 @require_POST
 def update_application_status(request, pk):
+
+    if not request.user.is_superuser and not request.user.groups.filter(name='Admission Officer').exists():
+         return HttpResponseForbidden("You do not have permission to view this applicant.")
+
+
     try:
         application = get_object_or_404(Application, pk=pk)
         data = json.loads(request.body)
@@ -197,7 +231,10 @@ def update_application_status(request, pk):
             'error_type': type(e).__name__  # Helps with debugging
         }, status=500)
 
+
+@login_required
 def chart_data(request):
+    
     # Get range parameter (3, 6, or 12 months)
     range_param = request.GET.get('range', '12')
     try:
@@ -270,7 +307,9 @@ def chart_data(request):
     })
 
 
+@login_required
 def search_applications(request):
+
     query = request.GET.get('q', '').strip()
     if len(query) < 3:
         return JsonResponse({'results': []})
@@ -299,9 +338,13 @@ def search_applications(request):
     return JsonResponse({'results': results})
 
 
-
+@login_required
 def applicant_list(request):
     # Base queryset with optimization
+    if not request.user.is_superuser and not request.user.groups.filter(name='Admission Officer').exists():
+        return HttpResponseForbidden("You do not have permission to view this applicant.")
+
+
     applications = Application.objects.select_related(
         'school', 'department', 'academic_session', 'state_of_origin', 'local_government'
     )
@@ -420,7 +463,13 @@ def applicant_list(request):
     return render(request, "crm/applicant_list.html", context)
 
 
+
+@login_required
 def screening_list(request):
+
+    if not request.user.is_superuser and not request.user.groups.filter(name='Screening Officer').exists():
+        return HttpResponseForbidden("You do not have permission to view this applicant.")
+
     screenings = Screening.objects.select_related('student').order_by('-id')
     
     # Get filter parameters
@@ -473,6 +522,11 @@ def screening_list(request):
 
 @login_required
 def screening_detail(request, screening_id):
+
+    
+    if not request.user.is_superuser and not request.user.groups.filter(name='Screening Officer').exists():
+        return HttpResponseForbidden("You do not have permission to view this applicant.")
+
     screening = get_object_or_404(Screening, id=screening_id)
     context = {'screening': screening}
     return render(request, 'crm/screening_detail.html', context)
@@ -484,7 +538,12 @@ def screening_detail(request, screening_id):
 
 
 @login_required
-def process_screening(request, pk):  # Changed parameter to 'pk'
+def process_screening(request, pk):
+
+    
+    if not request.user.is_superuser and not request.user.groups.filter(name='Screening Officer').exists():
+        return HttpResponseForbidden("You do not have permission to view this applicant.")
+
     screening = get_object_or_404(Screening, pk=pk)
     
     if request.method == 'POST':
@@ -516,7 +575,14 @@ def process_screening(request, pk):  # Changed parameter to 'pk'
 
     return redirect('screening_list')
 
+
+@login_required
 def pending_list(request):
+
+    if not request.user.is_superuser and not request.user.groups.filter(name='Admission Officer').exists():
+        return HttpResponseForbidden("You do not have permission to view this applicant.")
+
+
     pending_applications = Application.objects.filter(is_approved='Pending')
     total_applications = Application.objects.count()
     total_pending_application = Application.objects.filter(is_approved='Pending').count()
@@ -541,7 +607,7 @@ def pending_list(request):
     })
 
 
-    
+@login_required    
 def get_departments(request):
     school_id = request.GET.get('school_id')
     if school_id:
@@ -550,6 +616,7 @@ def get_departments(request):
         return JsonResponse(department_data, safe=False)
     return JsonResponse([])
 
+@login_required
 def get_lgas(request):
     state_id = request.GET.get('state_id')
     if state_id:
@@ -558,7 +625,14 @@ def get_lgas(request):
         return JsonResponse(lga_data, safe=False)
     return JsonResponse([])
 
+
+@login_required
 def edit_application(request, application_id):
+
+    if not request.user.is_superuser and not request.user.groups.filter(name='Admission Officer').exists():
+        return HttpResponseForbidden("You do not have permission to view this applicant.")
+
+
     applicant = get_object_or_404(Application, id=application_id)
     total_applications = Application.objects.count()
     total_pending_application = Application.objects.filter(is_approved='pending').count()
@@ -584,7 +658,12 @@ def edit_application(request, application_id):
     }
     return render(request, "crm/edit_application.html", context)
 
+
+@login_required
 def student_list(request):
+
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     students = Student.objects.all()
     total_applications = Application.objects.count()
     total_pending_application = Application.objects.filter(is_approved='pending').count()
@@ -606,7 +685,12 @@ def student_list(request):
 
 
 
+
+@login_required
 def edit_student(request, student_id):
+
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     student = get_object_or_404(Student, id=student_id)
     total_applications = Application.objects.count()
     if request.method == "POST":
@@ -620,16 +704,22 @@ def edit_student(request, student_id):
     return render(request, "crm/edit_student.html", {"form": form, "student": student, 'total_applications': total_applications})
 
 
-
+@login_required
 def view_applicant(request, application_id):
-    
+
+    if not request.user.is_superuser and not request.user.groups.filter(name='Admission Officer').exists():
+        return HttpResponseForbidden("You do not have permission to view this applicant.")
+
     applicant = get_object_or_404(Application, id=application_id)
     total_applications = Application.objects.count()
     total_pending_application = Application.objects.filter(is_approved='pending').count()
-    return render(request, "crm/applicant_profile.html", {"applicant": applicant,'total_pending_application': total_pending_application, 'total_applications': total_applications})
+    is_already_student = Student.objects.filter(application_number=applicant.application_number).exists()
+
+    
+    return render(request, "crm/applicant_profile.html", {"applicant": applicant,'total_pending_application': total_pending_application, 'total_applications': total_applications, 'is_already_student': is_already_student})
 
 
-
+@login_required
 def view_student(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     total_applications = Application.objects.count()
@@ -638,8 +728,13 @@ def view_student(request, student_id):
 
 
 
-
+@login_required
 def approve_application(request, application_id):
+
+    if not request.user.is_superuser and not request.user.groups.filter(name='Admission Officer').exists():
+        return HttpResponseForbidden("You do not have permission to view this applicant.")
+
+
     application = get_object_or_404(Application, id=application_id)
 
     # Prevent duplicate student records
@@ -697,8 +792,13 @@ def approve_application(request, application_id):
 
     return redirect("applicant_list")
 
-
+@login_required
 def decline_application(request, application_id):
+
+    if not request.user.is_superuser and not request.user.groups.filter(name='Admission Officer').exists():
+        return HttpResponseForbidden("You do not have permission to view this applicant.")
+
+
     application = get_object_or_404(Application, id=application_id)
 
 
@@ -736,8 +836,12 @@ def decline_application(request, application_id):
     return redirect("applicant_list")
 
 
-
+@login_required
 def revoke_application(request, application_id):
+
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
+
     application = get_object_or_404(Application, id=application_id)
 
     # Check if a student exists with this application number and delete it
@@ -783,8 +887,12 @@ Oceanview University Admissions Team
 
 
 
-
+@login_required
 def move_to_new_semester(request):
+
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
+    
     students = Student.objects.all()
 
     # Ensure a 'Graduated' year object exists with a dummy number
@@ -836,8 +944,10 @@ def move_to_new_semester(request):
     return redirect("semester_success")
 
 
-
+@login_required
 def move_semester_confirmationPage(request):
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     """Renders the confirmation page before processing the semester update."""
     if request.method == "POST":
         return redirect("move_semester")  # Redirect to the actual move function
@@ -850,6 +960,8 @@ def semester_success(request):
 
 
 def move_to_previous_semester(request):
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     students = Student.objects.all()
 
     for student in students:
@@ -880,21 +992,27 @@ def move_to_previous_semester(request):
     messages.success(request, "All students moved to the previous semester successfully!")
     return redirect("reverse_semester_success")
 
-
+@login_required
 def reverse_semester_confirmationPage(request):
+
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     """Renders the confirmation page before processing the semester update."""
     if request.method == "POST":
         return redirect("reverse_semester")  # Redirect to the actual move function
 
     return render(request, "crm/reverse_comfirmation_page.html")
 
-
+@login_required
 def semester_reverse_success(request):
     return render(request, "crm/reverse_semester_success.html")
 
 
-
+@login_required
 def Notify_student(request):
+
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     total_applications = Application.objects.count()
     total_pending_application = Application.objects.filter(is_approved=False).count()
     if request.method == "POST":
@@ -910,8 +1028,11 @@ def Notify_student(request):
     notifications = paginate_notifications(request)
 
     return render(request, "crm/post_notification.html", {"form":form, "notifications":notifications, 'total_pending_application': total_pending_application, 'total_applications': total_applications})    
-
+@login_required
 def paginate_notifications(request):
+
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     """ Helper function to paginate headlines """
     notification_list = Notification.objects.all()
     paginator = Paginator(notification_list, 3)  # 3 headlines per page
@@ -919,8 +1040,11 @@ def paginate_notifications(request):
     return paginator.get_page(page_number)
 
 
-
+@login_required
 def Post_headline(request):
+
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     total_applications = Application.objects.count()
     total_pending_application = Application.objects.filter(is_approved=False).count()
     if request.method == "POST":
@@ -937,16 +1061,22 @@ def Post_headline(request):
 
     return render(request, "crm/post_headline.html", {"form": form, "headlines": headlines, 'total_pending_application': total_pending_application, 'total_applications': total_applications})
 
-
+@login_required
 def paginate_headlines(request):
+
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     """ Helper function to paginate headlines """
     headlines_list = Headline.objects.all().order_by('-created_at')
     paginator = Paginator(headlines_list, 3)  # 3 headlines per page
     page_number = request.GET.get("page")
     return paginator.get_page(page_number)
 
-
+@login_required
 def Edit_headline(request, headline_id):
+
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     headline = get_object_or_404(Headline, id=headline_id)
     total_applications = Application.objects.count()
     total_pending_application = Application.objects.filter(is_approved=False).count()
@@ -966,8 +1096,11 @@ def Edit_headline(request, headline_id):
 
 
 
-
+@login_required
 def delete_headline(request, headline_id):
+
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     headline = get_object_or_404(Headline, id=headline_id)
     
     if request.user.is_superuser:  # Ensure only superusers can delete
@@ -978,13 +1111,21 @@ def delete_headline(request, headline_id):
     
     return redirect("Post_headline")  # Redirect to the headline list page
 
+@login_required
 def school_view(request):
+
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     schools = School.objects.all()
     total_applications = Application.objects.count()
 
     return render(request, 'crm/school_list.html', {'schools':schools, 'total_applications': total_applications})
 
+@login_required
 def add_School(request):
+
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     total_applications = Application.objects.count()
     if request.method == "POST":
         form = SchoolForm(request.POST, request.FILES)
@@ -1000,8 +1141,11 @@ def add_School(request):
 
     return render(request, "crm/add_school.html", {"form": form, "schools": schools, 'total_applications': total_applications})
 
-
+@login_required
 def paginate_schools(request):
+
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     """ Helper function to paginate headlines """
     schools_list = School.objects.all()
     paginator = Paginator(schools_list, 3)  # 3 headlines per page
@@ -1009,13 +1153,20 @@ def paginate_schools(request):
     return paginator.get_page(page_number)
 
 
+@login_required
 def department_view(request):
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     departments = Department.objects.all()
     total_applications = Application.objects.count()
 
     return render(request, 'crm/department_list.html', {'departments':departments, 'total_applications': total_applications})
 
+
+@login_required
 def add_department(request):
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     total_applications = Application.objects.count()
     if request.method == "POST":
         form = DepartmentForm(request.POST, request.FILES)
@@ -1031,7 +1182,12 @@ def add_department(request):
 
     return render(request, "crm/add_department.html", {"form": form, "departments": departments, 'total_applications': total_applications})
 
+
+@login_required
 def paginate_departments(request):
+
+    if not request.user.is_superuser:
+     return HttpResponseForbidden("You do not have permission to view this applicant.")
     """ Helper function to paginate headlines """
     departments_list = Department.objects.all()
     paginator = Paginator(departments_list, 3)  # 3 headlines per page
@@ -1040,14 +1196,29 @@ def paginate_departments(request):
 
 
 
-
+@login_required
 def course_view(request):
+
+    allowed_groups = ['Class Adviser', 'HOD (Head of Department)', 'Dean']
+
+    if not request.user.is_superuser and not request.user.groups.filter(name__in=allowed_groups).exists():
+       return HttpResponseForbidden("You do not have permission to view this applicant.")
+    
+
     courses = Course.objects.all()
     total_applications = Application.objects.count()
 
     return render(request, 'crm/course_list.html', {'courses':courses, 'total_applications': total_applications})
 
+
+@login_required
 def add_course(request):
+
+    allowed_groups = ['Class Adviser', 'HOD (Head of Department)', 'Dean']
+
+    if not request.user.is_superuser and not request.user.groups.filter(name__in=allowed_groups).exists():
+       return HttpResponseForbidden("You do not have permission to view this applicant.")
+    
     schools = School.objects.all()
     departments = Department.objects.all()
     semesters = Semester.objects.all().order_by('-year', 'name')
@@ -1098,6 +1269,9 @@ def add_course(request):
     return render(request, "crm/add_course.html", context)
 
 
+
+
+@login_required
 def load_departments(request):
     school_id = request.GET.get('school_id')
     departments = Department.objects.filter(school_id=school_id).order_by('name')
@@ -1105,8 +1279,16 @@ def load_departments(request):
 
 
 
+@login_required
 def add_grade(request):
     # Get all records
+
+    allowed_groups = ['Class Adviser', 'HOD (Head of Department)', 'Dean']
+
+    if not request.user.is_superuser and not request.user.groups.filter(name__in=allowed_groups).exists():
+       return HttpResponseForbidden("You do not have permission to view this applicant.")
+    
+
     schools = School.objects.all()
     departments = Department.objects.all()
     semesters = Semester.objects.all().order_by('-year', 'name')
@@ -1137,7 +1319,16 @@ def add_grade(request):
     return render(request, "crm/add_grade.html", context)
 
 
+
+@login_required
 def edit_grade(request, grade_id):
+
+    allowed_groups = ['Class Adviser', 'HOD (Head of Department)', 'Dean']
+
+    if not request.user.is_superuser and not request.user.groups.filter(name__in=allowed_groups).exists():
+       return HttpResponseForbidden("You do not have permission to view this applicant.")
+    
+
     grade = get_object_or_404(Grade, id=grade_id)
     total_applications = Application.objects.count()
 
@@ -1153,7 +1344,15 @@ def edit_grade(request, grade_id):
     return render(request, "crm/edit_grade.html", {"form": form, "grade": grade, 'total_applications': total_applications})
 
 
+
+@login_required
 def grade_list(request):
+
+    allowed_groups = ['Class Adviser', 'HOD (Head of Department)', 'Dean']
+
+    if not request.user.is_superuser and not request.user.groups.filter(name__in=allowed_groups).exists():
+       return HttpResponseForbidden("You do not have permission to view this applicant.")
+    
     grades = Grade.objects.select_related('student', 'course', 'semester').order_by('student__surname')
     total_applications = Application.objects.count()
     
@@ -1161,12 +1360,16 @@ def grade_list(request):
 
 
 
+
+@login_required
 def load_courses(request):
     semester_id = request.GET.get('semester_id')
     courses = Course.objects.filter(semester_id=semester_id).order_by('title')
     return JsonResponse(list(courses.values('id', 'title', 'code')), safe=False)
 
 
+
+@login_required
 def load_departments(request):
     school_id = request.GET.get('school_id')
     departments = Department.objects.filter(school_id=school_id).order_by('name')

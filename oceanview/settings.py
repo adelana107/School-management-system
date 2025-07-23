@@ -30,6 +30,9 @@ EMAIL_TIMEOUT = 20
 
 
 
+
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -84,6 +87,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                'crm.context_processors.user_roles',  # Custom context processor for user roles
             ],
         },
     },
