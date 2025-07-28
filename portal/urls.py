@@ -73,6 +73,7 @@ urlpatterns = [
     # Change Password
     path('change-password/', views.change_password, name='change_password'),
     path('change-password/success/', views.password_success, name='password_success'),
+    
 
     
 

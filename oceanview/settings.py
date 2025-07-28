@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'crm',
     'widget_tweaks',
     'corsheaders',
+    'crispy_forms',
     
 ]
 
@@ -163,6 +164,7 @@ LOGIN_URL = 'crm_login'
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default authentication
     'portal.backends.ApplicationOrMatricAuthBackend',
+    'crm.auth_backend.EmailBackend'
 ]
 
 MEDIA_URL = "/media/"

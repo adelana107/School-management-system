@@ -1,3 +1,0 @@
-function printBioData() {
-            window.print();
-        }

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Oceanview University | Staff Directory</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    :root {
+      --primary: #0056b3;
+      --primary-light: #e6f0ff;
+      --primary-dark: #003d7a;
+      --secondary: #002147;
+      --success: #28a745;
+      --danger: #dc3545;
+      --light-gray: #e9ecef;
+      --dark: #343a40;
+      --gray: #6c757d;
+      --sidebar-width: 280px;
+      --header-height: 70px;
+    }
+
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background-color: #f5f7fa;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    #content {
+      width: calc(100% - var(--sidebar-width));
+      margin-left: var(--sidebar-width);
+      transition: all 0.3s;
+    }
+
+    .header {
+      height: var(--header-height);
+      background: white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      padding: 0 30px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      color: var(--secondary);
+    }
+
+    .main-content {
+      padding: 30px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+    }
+
+    .page-title h2 {
+      color: var(--secondary);
+      font-weight: 600;
+    }
+
+    .btn {
+      padding: 8px 20px;
+      border-radius: 4px;
+      font-weight: 500;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .staff-table-container {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      padding: 20px;
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .search-box {
+      position: relative;
+      width: 300px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 15px 10px 40px;
+      border: 1px solid var(--light-gray);
+      border-radius: 4px;
+    }
+
+    .search-box i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray);
+    }
+
+    .table-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .table-actions select {
+      padding: 8px 15px;
+      border: 1px solid var(--light-gray);
+      border-radius: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 15px;
+      border-bottom: 1px solid var(--light-gray);
+    }
+
+    th {
+      background-color: var(--primary-light);
+      color: var(--secondary);
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      color: var(--gray);
+      cursor: pointer;
+    }
+
+    .action-btn:hover {
+      color: var(--primary);
+    }
+
+    .text-success {
+      color: var(--success);
+    }
+
+    .text-danger {
+      color: var(--danger);
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .pagination button {
+      padding: 8px 15px;
+      margin: 0 5px;
+      border: 1px solid var(--light-gray);
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .pagination button.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    @media (max-width: 992px) {
+      #sidebar {
+        margin-left: -280px;
+      }
+      #sidebar.active {
+        margin-left: 0;
+      }
+      #content {
+        width: 100%;
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  {% include 'crm/sidebar.html' %}
+
+  <div id="content">
+    <div class="header">
+      <h1>Staffs</h1>
+    </div>
+
+    <div class="main-content">
+      <div class="page-header">
+        <div class="page-title">
+          <h2>All Staff Members</h2>
+          <p>Showing {{ staff_profiles|length }} staff members</p>
+        </div>
+        <div class="page-actions">
+          {% if perms.crm.add_staffprofile %}
+            <button class="btn btn-primary" onclick="window.location.href='{% url 'create_staff_profile'%}'">
+              <i class="fas fa-plus"></i> Add New Staff
+            </button>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="staff-table-container">
+        <div class="table-header">
+          <form method="GET" action="#">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" name="q" placeholder="Search staff members..." value="{{ request.GET.q }}">
+            </div>
+          </form>
+          <div class="table-actions">
+            <select id="department-filter">
+              <option value="">All Departments</option>
+              {% for department in departments %}
+                <option value="{{ department.id }}" {% if request.GET.department == department.id|stringformat:"s" %}selected{% endif %}>{{ department.name }}</option>
+              {% endfor %}
+            </select>
+            <select id="school-filter">
+              <option value="">All Schools</option>
+              {% for school in schools %}
+                <option value="{{ school.id }}" {% if request.GET.school == school.id|stringformat:"s" %}selected{% endif %}>{{ school.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Email</th>
+              <th>School</th>
+              <th>Department</th>
+              <th>Group</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for profile in staff_profiles %}
+            <tr>
+              <td>{{ profile.user.username }}</td>
+              <td>{{ profile.user.email }}</td>
+              <td>{{ profile.school.name }}</td>
+              <td>{{ profile.department.name|default:"-" }}</td>
+              <td>{{ profile.group.name }}</td>
+              <td>
+                {% if perms.crm.change_staffprofile %}
+                <a href="{% url 'edit_staff' profile.user.id %}" class="action-btn" title="Edit">
+    <i class="fas fa-edit"></i>
+</a>
+
+                {% endif %}
+                {% if profile.user.is_active %}
+                  <button class="action-btn text-danger" onclick="disableStaff({{ profile.user.id }})"><i class="fas fa-user-slash"></i></button>
+                {% else %}
+                  <button class="action-btn text-success" onclick="enableStaff({{ profile.user.id }})"><i class="fas fa-user-check"></i></button>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="text-align:center;">No staff members found</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        {% if is_paginated %}
+        <div class="pagination">
+          {% if page_obj.has_previous %}
+          <button onclick="window.location.href='?page={{ page_obj.previous_page_number }}'"><i class="fas fa-angle-left"></i></button>
+          {% endif %}
+          {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+              <button class="active">{{ num }}</button>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+              <button onclick="window.location.href='?page={{ num }}'">{{ num }}</button>
+            {% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}
+          <button onclick="window.location.href='?page={{ page_obj.next_page_number }}'"><i class="fas fa-angle-right"></i></button>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function disableStaff(userId) {
+      if (confirm('Are you sure you want to disable this staff member?')) {
+        fetch("{% url 'disable_staff' 0 %}".replace(/0/, userId), {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(res => res.json())
+        .then(data => { if (data.success) location.reload(); else alert("Error"); });
+      }
+    }
+
+    function enableStaff(userId) {
+      if (confirm('Are you sure you want to enable this staff member?')) {
+        fetch("{% url 'enable_staff' 0 %}".replace(/0/, userId), {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(res => res.json())
+        .then(data => { if (data.success) location.reload(); else alert("Error"); });
+      }
+    }
+
+    document.getElementById('department-filter').addEventListener('change', () => {
+      const dept = document.getElementById('department-filter').value;
+      const school = document.getElementById('school-filter').value;
+      let q = new URLSearchParams(window.location.search).get('q') || '';
+      window.location.href = `?department=${dept}&school=${school}&q=${q}`;
+    });
+
+    document.getElementById('school-filter').addEventListener('change', () => {
+      const dept = document.getElementById('department-filter').value;
+      const school = document.getElementById('school-filter').value;
+      let q = new URLSearchParams(window.location.search).get('q') || '';
+      window.location.href = `?department=${dept}&school=${school}&q=${q}`;
+    });
+  </script>
+</body>
+</html>

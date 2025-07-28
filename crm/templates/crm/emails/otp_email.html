@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>CRM OTP Verification</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f9;
+      padding: 30px;
+      color: #333;
+    }
+    .container {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      max-width: 500px;
+      margin: auto;
+    }
+    .otp {
+      font-size: 32px;
+      font-weight: bold;
+      color: #007bff;
+      margin: 20px 0;
+    }
+    .footer {
+      font-size: 12px;
+      color: #888;
+      text-align: center;
+      margin-top: 30px;
+    }
+    .header {
+      font-size: 20px;
+      font-weight: bold;
+      color: #222;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">Hi {{ user.first_name|default:user.username }},</div>
+
+    <p>You recently attempted to log in to the OceanView CRM portal.</p>
+    <p>Please use the OTP code below to complete your login:</p>
+
+    <div class="otp">{{ otp }}</div>
+
+    <p>This OTP is valid for only a few minutes. If you didn't request this, please ignore the email.</p>
+
+    <div class="footer">
+      &copy; {{ now|date:"Y" }} OceanView University | CRM Team
+    </div>
+  </div>
+</body>
+</html>

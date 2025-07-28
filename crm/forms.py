@@ -7,54 +7,82 @@ from django.core.exceptions import ValidationError
 
 
 
-class StaffCreationForm(forms.Form):
-    username = forms.CharField(label="Username")
-    email = forms.EmailField(label="Email")
-    password1 = forms.CharField(label="Password", widget=forms.PasswordInput)
-    password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput)
-    school = forms.ModelChoiceField(queryset=School.objects.all(), label="School")
-    department = forms.ModelChoiceField(queryset=Department.objects.all(), label="Department")
+class StaffCreationForm(forms.ModelForm):
+    password1 = forms.CharField(label="Password", widget=forms.PasswordInput, required=False)
+    password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput, required=False)
+    school = forms.ModelChoiceField(queryset=School.objects.all(), label="School", required=False)
+    department = forms.ModelChoiceField(queryset=Department.objects.none(), label="Department", required=False)
     group = forms.ModelChoiceField(queryset=Group.objects.all(), label="Assign Group")
 
-    def clean_username(self):
-        username = self.cleaned_data.get("username")
-        if User.objects.filter(username=username).exists():
-            raise ValidationError("This username is already taken. Choose another one.")
-        return username
+    class Meta:
+        model = User
+        fields = ['username', 'last_name', 'first_name', 'email', 'is_active']
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+        super().__init__(*args, **kwargs)
+        self.user_instance = instance
+
+        self.fields['group'].queryset = Group.objects.all()
+
+        # Dynamic department filtering based on selected school
+        if 'school' in self.data:
+            try:
+                school_id = int(self.data.get('school'))
+                self.fields['department'].queryset = Department.objects.filter(school_id=school_id)
+            except (ValueError, TypeError):
+                self.fields['department'].queryset = Department.objects.none()
+        elif instance:
+            try:
+                staff_profile = instance.staffprofile
+                self.fields['school'].initial = staff_profile.school
+                self.fields['department'].queryset = Department.objects.filter(school=staff_profile.school)
+                self.fields['department'].initial = staff_profile.department
+                self.fields['group'].initial = staff_profile.group
+            except StaffProfile.DoesNotExist:
+                self.fields['department'].queryset = Department.objects.none()
 
     def clean(self):
         cleaned_data = super().clean()
-        password1 = cleaned_data.get("password1")
-        password2 = cleaned_data.get("password2")
+        password1 = cleaned_data.get('password1')
+        password2 = cleaned_data.get('password2')
 
         if password1 and password2 and password1 != password2:
-            raise ValidationError("Passwords do not match.")
+            self.add_error('password2', "Passwords do not match.")
+
         return cleaned_data
 
-    def save(self):
-        user = User.objects.create_user(
-            username=self.cleaned_data["username"],
-            email=self.cleaned_data["email"],
-            password=self.cleaned_data["password1"]
-        )
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        password = self.cleaned_data.get('password1')
+        if password:
+            user.set_password(password)
 
-        user.is_staff = True  # ✅ Give staff access
-        user.is_active = True  # ✅ Ensure the user is active
-        user.save()
+        user.is_staff = True
+        user.is_active = True  # Always active after creation
 
-        group = self.cleaned_data["group"]
-        user.groups.add(group)
+        if commit:
+            user.save()
 
-        school = self.cleaned_data["school"]
-        department = self.cleaned_data["department"]
+            school = self.cleaned_data.get('school')
+            department = self.cleaned_data.get('department')
+            group = self.cleaned_data.get('group')
 
-        StaffProfile.objects.create(
-            user=user,
-            school=school,
-            department=department
-        )
+            StaffProfile.objects.create(
+                user=user,
+                first_name=self.cleaned_data.get('first_name'),
+                last_name=self.cleaned_data.get('last_name'),
+                school=school,
+                department=department,
+                group=group
+            )
+
+            user.groups.set([group])
+            user.save()
 
         return user
+
+    
 
 
 
@@ -232,7 +260,7 @@ class StudentForm(forms.ModelForm):
 
 
 class CrmLoginForm(forms.Form):
-    email = forms.CharField(label="Email", max_length=20)
+    email = forms.CharField(label="Email", max_length=100)
     password = forms.CharField(label="Password", widget=forms.PasswordInput)
 
 

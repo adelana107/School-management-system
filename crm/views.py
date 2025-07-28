@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from portal.models import Application, School, Department, Student, Year, Semester, Headline, Notification, Course, Grade, Lga, State, Screening, AcademicSession, StaffProfile
-from django.contrib.auth.decorators import user_passes_test,login_required
+from django.contrib.auth.decorators import user_passes_test,login_required, permission_required
 from .forms import ApplicationForm, StudentForm, CrmLoginForm, HeadlineForm, NotificationForm, SchoolForm, DepartmentForm, CourseForm, GradeForm, TimeTableForm
 from django.db.models import Count, Q
 from django.db.models.expressions import RawSQL
@@ -29,23 +29,135 @@ from django.utils.html import strip_tags
 from django.http import HttpResponseForbidden
 from django.contrib.auth import logout
 from crm.forms import StaffCreationForm
+import random
+from django.contrib.auth import get_backends
+from django.views.decorators.csrf import csrf_exempt
+
+def is_superuser(user):
+    """Check if the user is a superuser."""
+    return user.is_superuser
+
+
+
+@csrf_exempt
+@login_required
+@user_passes_test(is_superuser)
+@permission_required('auth.change_user', raise_exception=True)
+def disable_staff(request, user_id):
+    if request.method == "POST":
+        try:
+            user = User.objects.get(pk=user_id)
+            user.is_active = False
+            user.save()
+            return JsonResponse({'success': True})
+        except User.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'User not found'})
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+
+@csrf_exempt
+@login_required
+@user_passes_test(is_superuser)
+@permission_required('auth.change_user', raise_exception=True)
+def enable_staff(request, user_id):
+    if request.method == "POST":
+        try:
+            user = User.objects.get(pk=user_id)
+            user.is_active = True
+            user.save()
+            return JsonResponse({'success': True})
+        except User.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'User not found'})
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
 
 
 @login_required
+@user_passes_test(is_superuser)
+def staff_list(request):
+    staff_profiles = StaffProfile.objects.select_related('user', 'group', 'department', 'school').all()
+    departments = Department.objects.all()
+    schools = School.objects.all()
+    
+    return render(request, 'crm/staff_list.html', {
+        'staff_profiles': staff_profiles,
+        'departments': departments,
+        'schools': schools,
+    })
+
+
+
+def crm_verify_otp(request):
+    if request.method == "POST":
+        entered_otp = request.POST.get("otp")
+        stored_otp = request.session.get("otp")
+        user_id = request.session.get("crm_user_id")
+
+        if entered_otp == stored_otp and user_id:
+            try:
+                user = User.objects.get(id=user_id)
+
+                # Set backend manually to first configured backend
+                backend = get_backends()[0]
+                user.backend = f"{backend.__module__}.{backend.__class__.__name__}"
+
+                login(request, user)
+
+                # Clear session data
+                request.session.pop("otp", None)
+                request.session.pop("crm_user_id", None)
+
+                return redirect("dashboard")
+            except User.DoesNotExist:
+                messages.error(request, "Invalid session user.")
+        else:
+            messages.error(request, "Incorrect OTP. Try again.")
+
+    return render(request, "crm/security/verify_otp.html")
+
+
+
+
+
+@login_required
+@user_passes_test(is_superuser)
 def create_staff_profile(request):
     if request.method == 'POST':
         form = StaffCreationForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('staff_success')  # replace with actual success page
+            return redirect('staff_success')
     else:
         form = StaffCreationForm()
-    return render(request, 'crm/accounts/create_staff_profile.html', {'form': form})
+
+    departments = Department.objects.select_related('school')
+    department_data = [{'id': d.id, 'name': d.name, 'school_id': d.school.id} for d in departments]
+
+    return render(request, 'crm/accounts/create_staff_profile.html', {
+        'form': form,
+        'departments': department_data,
+    })
+
 
 
 def staff_success(request):
     return render(request, 'crm/accounts/staff_success.html')
 
+
+@login_required
+@user_passes_test(is_superuser)
+def edit_staff_profile(request, user_id):
+    user = get_object_or_404(User, id=user_id)  # staff you clicked
+
+    if request.method == 'POST':
+        form = StaffCreationForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('staff_success')
+    else:
+        form = StaffCreationForm(instance=user)
+
+    return render(request, 'crm/accounts/edit_staff.html', {'form': form, 'user': user})
 
 
 
@@ -90,35 +202,51 @@ def Crmlogout(request):
 
 
 def Crmlogin(request):
-    form = CrmLoginForm()  # Always define form first
-
-    if request.method == "POST":
+    if request.method == 'POST':
         form = CrmLoginForm(request.POST)
         if form.is_valid():
-            email = form.cleaned_data["email"]
-            password = form.cleaned_data["password"]
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
 
-            try:
-                user = User.objects.get(email=email)
-            except User.DoesNotExist:
-                messages.error(request, "User with this email does not exist.")
-                return render(request, "crm/login.html", {"form": form})
+            user = authenticate(request, email=email, password=password)
 
-            user = authenticate(request, username=user.username, password=password)
+            if user is not None:
+                # ✅ Immediately deny non-staff/non-superuser
+                if not (user.is_staff or user.is_superuser):
+                    messages.error(request, "Access denied. You are not authorized to log into the CRM.")
+                    return render(request, 'crm/login.html', {'form': form})
 
-            if user is not None and (user.is_superuser or user.is_staff):
-                login(request, user)
-                return redirect("dashboard")
+                # ✅ Then check if account is active
+                if not user.is_active:
+                    messages.error(request, "Your account is not active. Please contact the administrator.")
+                    return render(request, 'crm/login.html', {'form': form})
+
+                # ✅ If valid staff, proceed with OTP
+                otp = str(random.randint(100000, 999999))
+                request.session['otp'] = otp
+                request.session['crm_user_id'] = user.id
+
+                subject = 'Your CRM Login OTP'
+                from_email = 'oceanviewuniveristy.edu@gmail.com'
+                to_email = [email]
+                html_content = render_to_string('crm/emails/otp_email.html', {'otp': otp, 'user': user})
+
+                msg = EmailMultiAlternatives(subject, '', from_email, to_email)
+                msg.attach_alternative(html_content, "text/html")
+                msg.send()
+
+                return redirect('crm_verify_otp')
             else:
-                messages.error(request, "Access denied. You are not authorized to use the CRM.")
+                messages.error(request, "Invalid email or password.")
+    else:
+        form = CrmLoginForm()
 
-    return render(request, "crm/login.html", {"form": form})
+    return render(request, 'crm/login.html', {'form': form})
 
 
 
-def is_superuser(user):
-    """Check if the user is a superuser."""
-    return user.is_superuser
+
+
 
 
 
@@ -719,8 +847,12 @@ def edit_application(request, application_id):
 @login_required
 def student_list(request):
 
-    if not request.user.is_superuser:
-     return HttpResponseForbidden("You do not have permission to view this applicant.")
+    allowed_groups = [ 'HOD (Head of Department)', 'Dean']
+
+    if not request.user.is_superuser and not request.user.groups.filter(name__in=allowed_groups).exists():
+       return HttpResponseForbidden("You do not have permission to view this applicant.")
+    
+
     students = Student.objects.all()
     total_applications = Application.objects.count()
     total_pending_application = Application.objects.filter(is_approved='pending').count()
@@ -831,7 +963,7 @@ def approve_application(request, application_id):
         'application_number': application.application_number,
         'surname': application.surname,
     }
-    html_message = render_to_string('emails/approved_email.html', context)
+    html_message = render_to_string('crm/emails/approved_email.html', context)
     plain_message = strip_tags(html_message)
 
     try:
@@ -874,7 +1006,7 @@ def decline_application(request, application_id):
         'first_name': application.first_name,
         'application_number': application.application_number
     }
-    html_message = render_to_string('emails/declined_email.html', context)
+    html_message = render_to_string('crm/emails/declined_email.html', context)
     plain_message = strip_tags(html_message)
 
     try:
@@ -1212,8 +1344,12 @@ def paginate_schools(request):
 
 @login_required
 def department_view(request):
-    if not request.user.is_superuser:
-     return HttpResponseForbidden("You do not have permission to view this applicant.")
+    allowed_groups = ['Dean']
+
+    if not request.user.is_superuser and not request.user.groups.filter(name__in=allowed_groups).exists():
+       return HttpResponseForbidden("You do not have permission to view this applicant.")
+
+
     departments = Department.objects.all()
     total_applications = Application.objects.count()
 
@@ -1222,8 +1358,12 @@ def department_view(request):
 
 @login_required
 def add_department(request):
-    if not request.user.is_superuser:
-     return HttpResponseForbidden("You do not have permission to view this applicant.")
+    allowed_groups = ['Dean']
+
+    if not request.user.is_superuser and not request.user.groups.filter(name__in=allowed_groups).exists():
+       return HttpResponseForbidden("You do not have permission to view this applicant.")
+
+
     total_applications = Application.objects.count()
     if request.method == "POST":
         form = DepartmentForm(request.POST, request.FILES)
@@ -1243,8 +1383,12 @@ def add_department(request):
 @login_required
 def paginate_departments(request):
 
-    if not request.user.is_superuser:
-     return HttpResponseForbidden("You do not have permission to view this applicant.")
+    allowed_groups = ['Dean']
+
+    if not request.user.is_superuser and not request.user.groups.filter(name__in=allowed_groups).exists():
+       return HttpResponseForbidden("You do not have permission to view this applicant.")
+
+
     """ Helper function to paginate headlines """
     departments_list = Department.objects.all()
     paginator = Paginator(departments_list, 3)  # 3 headlines per page

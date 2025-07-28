@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User,Group
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.hashers import make_password
@@ -380,8 +380,12 @@ class Screening(models.Model):
     
 class StaffProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    first_name = models.CharField(max_length=100, blank=True, null=True)
+    last_name = models.CharField(max_length=100,  blank=True, null=True)
     school = models.ForeignKey(School, on_delete=models.CASCADE)  
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+    group = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True)
+
 
     def __str__(self):
       department_name = self.department.name if self.department else "No Staff"
