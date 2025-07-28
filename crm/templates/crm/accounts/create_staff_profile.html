@@ -876,26 +876,46 @@
             animateOnScroll(); // Run once on load
         });
 
-        
-    const departmentOptions = {{ departments|safe }};
-    const schoolSelect = document.getElementById("id_school");
-    const departmentSelect = document.getElementById("id_department");
 
-    schoolSelect.addEventListener("change", function () {
-        const schoolId = this.value;
-        departmentSelect.innerHTML = "<option value=''>---------</option>";  // reset
+   document.addEventListener('DOMContentLoaded', function () {
+    const schoolSelect = document.getElementById('id_school');
+    const deptSelect = document.getElementById('id_department');
+    const selectedDeptId = deptSelect.getAttribute('data-selected');  // store initial selection
 
-        departmentOptions.forEach(function (dept) {
-            if (dept.school_id == schoolId) {
-                const option = document.createElement("option");
-                option.value = dept.id;
-                option.textContent = dept.name;
-                departmentSelect.appendChild(option);
+    function loadDepartments(schoolId, selectedDeptId = null) {
+      if (!schoolId) {
+        deptSelect.innerHTML = '<option value="">Select a department</option>';
+        return;
+      }
+
+      fetch(`/get-departments/?school_id=${schoolId}`)
+        .then(response => response.json())
+        .then(data => {
+          deptSelect.innerHTML = '<option value="">Select a department</option>';
+          data.forEach(function (dept) {
+            const option = document.createElement('option');
+            option.value = dept.id;
+            option.textContent = dept.name;
+
+            if (selectedDeptId && dept.id == selectedDeptId) {
+              option.selected = true;
             }
-        });
-    });
 
-    
+            deptSelect.appendChild(option);
+          });
+        });
+    }
+
+    // Load departments if school is already selected
+    if (schoolSelect.value) {
+      loadDepartments(schoolSelect.value, selectedDeptId);
+    }
+
+    // Change event to load departments dynamically
+    schoolSelect.addEventListener('change', function () {
+      loadDepartments(this.value);
+    });
+  });
     </script>
 </body>
 </html>

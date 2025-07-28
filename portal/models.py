@@ -56,7 +56,7 @@ class Department(models.Model):
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name="departments")
 
     def __str__(self):
-        return self.name
+        return self.name or "Unnamed Department"
     
 class Lecturer(models.Model):
     name = models.CharField(max_length=100)

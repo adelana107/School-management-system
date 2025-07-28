@@ -79,6 +79,7 @@ urlpatterns = [
 
 
     path('ajax/load-departments/', load_departments, name='ajax_load_departments'),
+    
 
     #pending list
 

@@ -3,9 +3,12 @@ from django.contrib.auth.models import User, Group
 from portal.models import StaffProfile
 from portal.models import Application, Department, School, State, Lga, Student, Headline, Category, Notification, Course, Grade, Semester, TimeTable
 from django.core.exceptions import ValidationError
+from django.contrib.auth import get_user_model
 
 
 
+
+User = get_user_model()
 
 class StaffCreationForm(forms.ModelForm):
     password1 = forms.CharField(label="Password", widget=forms.PasswordInput, required=False)
@@ -25,21 +28,26 @@ class StaffCreationForm(forms.ModelForm):
 
         self.fields['group'].queryset = Group.objects.all()
 
-        # Dynamic department filtering based on selected school
+        # Prepopulate from instance
+        if instance:
+            try:
+                staff_profile = instance.staffprofile
+                self.fields['school'].initial = staff_profile.school
+                self.fields['department'].initial = staff_profile.department
+                self.fields['group'].initial = staff_profile.group
+
+                # Set department queryset based on selected school
+                if staff_profile.school:
+                    self.fields['department'].queryset = Department.objects.filter(school=staff_profile.school)
+            except StaffProfile.DoesNotExist:
+                self.fields['department'].queryset = Department.objects.none()
+
+        # Update department list if a school is selected via POST (form resubmission)
         if 'school' in self.data:
             try:
                 school_id = int(self.data.get('school'))
                 self.fields['department'].queryset = Department.objects.filter(school_id=school_id)
             except (ValueError, TypeError):
-                self.fields['department'].queryset = Department.objects.none()
-        elif instance:
-            try:
-                staff_profile = instance.staffprofile
-                self.fields['school'].initial = staff_profile.school
-                self.fields['department'].queryset = Department.objects.filter(school=staff_profile.school)
-                self.fields['department'].initial = staff_profile.department
-                self.fields['group'].initial = staff_profile.group
-            except StaffProfile.DoesNotExist:
                 self.fields['department'].queryset = Department.objects.none()
 
     def clean(self):
@@ -47,9 +55,9 @@ class StaffCreationForm(forms.ModelForm):
         password1 = cleaned_data.get('password1')
         password2 = cleaned_data.get('password2')
 
-        if password1 and password2 and password1 != password2:
-            self.add_error('password2', "Passwords do not match.")
-
+        if password1 or password2:
+            if password1 != password2:
+                self.add_error('password2', "Passwords do not match.")
         return cleaned_data
 
     def save(self, commit=True):
@@ -59,29 +67,36 @@ class StaffCreationForm(forms.ModelForm):
             user.set_password(password)
 
         user.is_staff = True
-        user.is_active = True  # Always active after creation
 
         if commit:
             user.save()
 
-            school = self.cleaned_data.get('school')
-            department = self.cleaned_data.get('department')
             group = self.cleaned_data.get('group')
-
-            StaffProfile.objects.create(
-                user=user,
-                first_name=self.cleaned_data.get('first_name'),
-                last_name=self.cleaned_data.get('last_name'),
-                school=school,
-                department=department,
-                group=group
-            )
-
             user.groups.set([group])
             user.save()
 
-        return user
+            school = self.cleaned_data.get('school')
+            department = self.cleaned_data.get('department')
 
+            try:
+                profile = user.staffprofile
+                profile.first_name = self.cleaned_data.get('first_name')
+                profile.last_name = self.cleaned_data.get('last_name')
+                profile.school = school
+                profile.department = department
+                profile.group = group
+                profile.save()
+            except StaffProfile.DoesNotExist:
+                StaffProfile.objects.create(
+                    user=user,
+                    first_name=self.cleaned_data.get('first_name'),
+                    last_name=self.cleaned_data.get('last_name'),
+                    school=school,
+                    department=department,
+                    group=group
+                )
+
+        return user
     
 
 
