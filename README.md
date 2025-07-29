@@ -1,6 +1,6 @@
 # 🏫 School Management System
 
-A Django-based school portal for managing ND/HND applications, student admissions, staff records, course registration, screening, payments, and more.
+A Django-based school portal for managing  applications, student admissions, staff records, course registration, screening, payments, and more.
 
 ---
 
