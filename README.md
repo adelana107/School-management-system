@@ -1,6 +1,8 @@
 # 🏫 School Management System
 
-A Django-based school portal for managing  applications, student admissions, staff records, course registration, screening, payments, and more.
+A Django-based school portal for managing applications, student admissions, staff records, course registration, screening, payments, and more.
+
+> > > > > > > afbf177 (Updated the README.md)
 
 ---
 
@@ -226,4 +228,4 @@ Use it to access both:
 
 ## 📞 Contact
 
-For questions or contributions, reach out via GitHub: [adelana107](https://github.com/adelana107)
+For questions or contributions, reach out via GitHub: [adelana107](https://github.com/adelana107).
