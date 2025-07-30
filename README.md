@@ -65,7 +65,13 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-### 6. Run the Server
+### 6. import the STATE and LGA
+
+```bash [depends on where your excel sheet is located]
+python manage.py import_states_lgas "C:\Users\Adela\Desktop\School-management-system\states_lgas.csv"
+```
+
+### 7. Run the Server
 
 ```bash
 python manage.py runserver
