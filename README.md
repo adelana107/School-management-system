@@ -2,8 +2,6 @@
 
 A Django-based school portal for managing applications, student admissions, staff records, course registration, screening, payments, and more.
 
-> > > > > > > afbf177 (Updated the README.md)
-
 ---
 
 ## 🚀 Features
