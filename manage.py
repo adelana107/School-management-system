@@ -3,7 +3,6 @@
 import os
 import sys
 
-web: gunicorn oceanview.wsgi
 
 
 def main():

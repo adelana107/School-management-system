@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Your custom apps
+    # my custom apps
     'portal',
     'crm',
 
@@ -60,7 +60,14 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'corsheaders',
     'crispy_forms',
+    'crispy_bootstrap5',
 ]
+
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+
 
 
 # -------------------------
