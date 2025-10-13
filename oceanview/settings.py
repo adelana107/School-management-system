@@ -1,17 +1,23 @@
 import os
 from pathlib import Path
 import dj_database_url  # for production database URLs
+from dotenv import load_dotenv
 
-# Base directory
+# Load environment variables from .env
+load_dotenv()
+
+# -------------------------
+# BASE DIRECTORY
+# -------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # -------------------------
 # SECURITY & DEBUG SETTINGS
 # -------------------------
-SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-dev-key")
-DEBUG = os.environ.get("DEBUG", "False") == "True"
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-dev-key")
+DEBUG = os.getenv("DEBUG", "False") == "True"
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 # -------------------------
@@ -22,17 +28,17 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 EMAIL_USE_TLS = False
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'oceanviewuniversity.edu@gmail.com')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'wkddefmlayzqhkaw')
-DEFAULT_FROM_EMAIL = 'Oceanview University <oceanviewuniversity.edu@gmail.com>'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'oceanviewuniversity.edu@gmail.com')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = f"Oceanview University <{EMAIL_HOST_USER}>"
 EMAIL_TIMEOUT = 20
 
 
 # -------------------------
 # PAYSTACK KEYS
 # -------------------------
-PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY', 'sk_test_04fd78fef7da99543475a4893097b4d3a2d7933e')
-PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY', 'pk_test_6f8573c474570944872ad22461e6877a04b3279c')
+PAYSTACK_SECRET_KEY = os.getenv('PAYSTACK_SECRET_KEY', '')
+PAYSTACK_PUBLIC_KEY = os.getenv('PAYSTACK_PUBLIC_KEY', '')
 
 
 # -------------------------
@@ -50,7 +56,7 @@ INSTALLED_APPS = [
     'portal',
     'crm',
 
-    # 3rd-party
+    # 3rd-party apps
     'widget_tweaks',
     'corsheaders',
     'crispy_forms',
@@ -63,13 +69,14 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # serve static files in production
+
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -126,7 +133,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = BASE_DIR / "media"
 
 
 # -------------------------
@@ -152,9 +159,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            os.path.join(BASE_DIR, 'templates')
-        ],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
