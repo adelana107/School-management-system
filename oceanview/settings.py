@@ -1,46 +1,43 @@
-
 import os
 from pathlib import Path
+import dj_database_url  # for production database URLs
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+# -------------------------
+# SECURITY & DEBUG SETTINGS
+# -------------------------
+SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-dev-key")
+DEBUG = os.environ.get("DEBUG", "False") == "True"
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-g&k9$^*2af$-*my8r8kfecjezglsiyy-jaqa))+1*1uvgyd52@'
-PAYSTACK_SECRET_KEY = 'sk_test_04fd78fef7da99543475a4893097b4d3a2d7933e'  
-PAYSTACK_PUBLIC_KEY = 'pk_test_6f8573c474570944872ad22461e6877a04b3279c'  
 
+# -------------------------
+# EMAIL SETTINGS
+# -------------------------
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 465
-EMAIL_USE_SSL = True        
-EMAIL_USE_TLS = False       
-
-EMAIL_HOST_USER = 'oceanviewuniversity.edu@gmail.com'
-EMAIL_HOST_PASSWORD = 'wkddefmlayzqhkaw'  
-
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'oceanviewuniversity.edu@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'wkddefmlayzqhkaw')
 DEFAULT_FROM_EMAIL = 'Oceanview University <oceanviewuniversity.edu@gmail.com>'
 EMAIL_TIMEOUT = 20
 
 
+# -------------------------
+# PAYSTACK KEYS
+# -------------------------
+PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY', 'sk_test_04fd78fef7da99543475a4893097b4d3a2d7933e')
+PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY', 'pk_test_6f8573c474570944872ad22461e6877a04b3279c')
 
 
-
-
-
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
-
-# Application definition
-
+# -------------------------
+# APPLICATIONS
+# -------------------------
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -49,32 +46,109 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-
+    # Your custom apps
     'portal',
     'crm',
+
+    # 3rd-party
     'widget_tweaks',
     'corsheaders',
     'crispy_forms',
-    
 ]
 
+
+# -------------------------
+# MIDDLEWARE
+# -------------------------
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # serve static files in production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-
     'corsheaders.middleware.CorsMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins for CORS
+CORS_ALLOW_ALL_ORIGINS = True
 
+
+# -------------------------
+# URLS / WSGI
+# -------------------------
 ROOT_URLCONF = 'oceanview.urls'
+WSGI_APPLICATION = 'oceanview.wsgi.application'
 
+
+# -------------------------
+# DATABASE CONFIGURATION
+# -------------------------
+# Uses DATABASE_URL if provided, else falls back to SQLite
+DATABASES = {
+    'default': dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600
+    )
+}
+
+
+# -------------------------
+# PASSWORD VALIDATION
+# -------------------------
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
+
+# -------------------------
+# INTERNATIONALIZATION
+# -------------------------
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_TZ = True
+
+
+# -------------------------
+# STATIC & MEDIA FILES
+# -------------------------
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / "crm/static",
+    BASE_DIR / "portal/static",
+]
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+
+# -------------------------
+# AUTH SETTINGS
+# -------------------------
+LOGIN_URL = 'crm_login'
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'portal.backends.ApplicationOrMatricAuthBackend',
+    'crm.auth_backend.EmailBackend',
+]
+
+
+# -------------------------
+# DEFAULT FIELD TYPE
+# -------------------------
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# -------------------------
+# TEMPLATE SETTINGS
+# -------------------------
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -88,84 +162,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-
-                'crm.context_processors.user_roles',  # Custom context processor for user roles
+                'crm.context_processors.user_roles',
             ],
         },
     },
 ]
-
-WSGI_APPLICATION = 'oceanview.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
-
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
-USE_I18N = True
-
-USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
-STATIC_URL = "static/"
-
-
-
-STATICFILES_DIRS = [
-    BASE_DIR / "crm/static",
-    BASE_DIR / "portal/static",
-]
-
-STATIC_ROOT = BASE_DIR / "staticfiles"
-
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-LOGIN_URL = 'crm_login' 
-
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # Default authentication
-    'portal.backends.ApplicationOrMatricAuthBackend',
-    'crm.auth_backend.EmailBackend'
-]
-
-MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
